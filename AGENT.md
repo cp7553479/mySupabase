@@ -40,9 +40,6 @@
 ### `logistics_check`
 物流检查表，存储物流检查记录
 
-### `orders`
-订单表，存储客户订单信息
-
 ### `pi_product_details`
 PI产品明细表，存储形式发票中的产品明细
 
