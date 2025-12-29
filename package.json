@@ -7,7 +7,9 @@
     "test": "node supabase-client.js",
     "test-connection": "node supabase-client.js",
     "dev": "node index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "download-functions": "node download_functions.js",
+    "supabase-login": "supabase login"
   },
   "repository": {
     "type": "git",
