@@ -2,7 +2,7 @@
 
 ## 规则
 
-始终使用 Supabase CLI 操作本项目实例。禁止直接连接数据库或使用第三方工具。
+始终使用 Supabase CLI 操作本项目实例。
 
 项目ID: `hdwuwrozyaldnrdqzwwz`
 
@@ -58,11 +58,11 @@ ASI产品附加费用子表。一个`product_asi`可对应多个upcharge项，�
 ### `product_asi_full_view`
 视图，用于下载符合ASI上传产品模板的查询结果
 
-### `purchase_order_details`
-采购订单明细表，存储采购订单的产品明细
-
-### `purchase_orders`
+### `PO`
 采购订单表，存储采购订单信息
+
+### `PO_details`
+采购订单明细表，存储采购订单的产品明细
 
 ### `vendor_products`
 供应商产品表，存储供应商提供的产品信息
