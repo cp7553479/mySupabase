@@ -1,89 +1,50 @@
-# My Supabase Edge Functions
+# Supabase Edge Functions
 
-这是一个 Supabase Edge Functions 项目，包含了从云端下载的完整函数代码和 Supabase CLI 工具。
+项目ID: hdwuwrozyaldnrdqzwwz
 
-## 项目概述
+## 函数列表
 
-**项目ID**: `hdwuwrozyaldnrdqzwwz`
-**Edge Functions**: 8个生产级函数
-**工具**: Supabase CLI v2.67.1
-**运行环境**: Deno (Edge Functions 标准)
+- `deepseek-email-extract` - DeepSeek提取邮件内容
+- `process-product-images` - 处理产品图片
+- `feishu-webhook` - 飞书webhook处理
+- `upsertDBFromBitable` - 飞书表格同步到数据库
+- `deleteDBFromBitable` - 从飞书删除数据库记录
+- `feishuListFields` - 获取飞书字段列表
+- `upsertBitableFromDB` - 数据库同步到飞书表格
+- `delete-storage` - 删除存储文件
 
-## Edge Functions 列表
+## 共享工具
 
-| 函数名 | 功能描述 | 状态 |
-|--------|----------|------|
-| `deepseek-email-extract` | 使用DeepSeek AI提取邮件内容 | ✅ ACTIVE |
-| `process-product-images` | 产品图片处理 | ✅ ACTIVE |
-| `feishu-webhook` | 飞书Webhook处理 | ✅ ACTIVE |
-| `upsertDBFromBitable` | 飞书多维表格→数据库同步 | ✅ ACTIVE |
-| `deleteDBFromBitable` | 删除数据库记录（从飞书） | ✅ ACTIVE |
-| `feishuListFields` | 获取飞书字段列表 | ✅ ACTIVE |
-| `upsertBitableFromDB` | 数据库→飞书多维表格同步 | ✅ ACTIVE |
-| `delete-storage` | 删除存储文件 | ✅ ACTIVE |
+- `cors.ts` - CORS处理
+- `feishuCrypto.ts` - 飞书加密
+- `getDenoEnv.ts` - 环境变量
+- `larkClient.ts` - 飞书客户端
+- `supabaseClient.ts` - Supabase客户端
+- `transBitableRecordsToDB.ts` - 数据转换
 
-## 共享工具库
+## 常用命令
 
-**`_shared/` 目录包含:**
-- `cors.ts` - CORS跨域处理
-- `feishuCrypto.ts` - 飞书数据加密
-- `getDenoEnv.ts` - 环境变量工具
-- `larkClient.ts` - 飞书API客户端
-- `supabaseClient.ts` - Supabase客户端工具
-- `transBitableRecordsToDB.ts` - 数据转换工具
-
-## 本地开发
-
-### 环境要求
-- Node.js v16+
-- Supabase CLI
-
-### 安装 Supabase CLI
+启动本地服务:
 ```bash
-# macOS (使用Homebrew)
-brew install supabase/tap/supabase
-
-# 或下载二进制文件
-curl -L https://github.com/supabase/cli/releases/latest/download/supabase_darwin_arm64.tar.gz -o supabase.tar.gz
-tar -xzf supabase.tar.gz
-sudo mv supabase /usr/local/bin/
-# 或移动到用户目录: mv supabase ~/bin/
-```
-
-### 启动本地环境
-```bash
-# 启动 Supabase 本地服务
 supabase start
-
-# 查看服务状态
 supabase status
 ```
 
-### 部署 Edge Functions
+部署函数:
 ```bash
-# 部署特定函数
-supabase functions deploy deepseek-email-extract
-
-# 部署所有函数
-for func in deepseek-email-extract process-product-images feishu-webhook upsertDBFromBitable deleteDBFromBitable feishuListFields upsertBitableFromDB delete-storage; do
-  supabase functions deploy $func
-done
+supabase functions deploy 函数名
 ```
 
-### 停止本地服务
+停止服务:
 ```bash
 supabase stop
 ```
 
-## 项目结构
+## 结构
 
 ```
-mysupabase/
-├── package.json          # Node.js项目配置
-├── package-lock.json     # 依赖锁定文件
-├── supabase/             # Supabase 相关文件
-│   └── functions/        # Edge Functions 源代码
-│       ├── _shared/      # 共享工具库
-│       └── [function]/   # 各函数目录
-└── README.md             # 项目说明
+supabase/
+  functions/
+    _shared/     # 工具库
+    [函数名]/    # 各函数
 ```
