@@ -55,9 +55,6 @@ Product for asi
 ### `product_asi_upcharge`
 This is a duplicate of product_asi
 
-### `product_details`
-This is a detail of product
-
 ### `purchase_order_details`
 采购订单明细表，存储采购订单的产品明细
 
