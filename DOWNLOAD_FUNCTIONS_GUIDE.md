@@ -20,6 +20,12 @@ npm run supabase-login
 1. 访问: https://app.supabase.com/account/tokens
 2. 点击 "Generate new token"
 3. 复制生成的 token（格式类似：`sbp_0102...1920`）
+4. **重要**: 确保复制的是完整的 access token，不要复制其他类型的key
+
+**常见错误**:
+- ❌ `sb_secret_xxx` - 这是错误的格式
+- ❌ API keys (anon/service_role) - 不是access token
+- ✅ `sbp_0102...1920` - 正确的access token格式
 
 #### 方法3: 使用环境变量
 ```bash

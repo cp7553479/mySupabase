@@ -96,12 +96,40 @@ const client = getSupabaseClient();
 # 测试连接
 npm run test-connection
 
+# 测试Supabase access token
+npm run test-token
+
+# 下载云端Edge Functions
+npm run download-functions
+
+# Supabase CLI登录
+npm run supabase-login
+
 # 启动项目
 npm start
 
 # 开发模式
 npm run dev
 ```
+
+### 下载 Edge Functions
+
+1. **获取正确的 Access Token**:
+   ```bash
+   # 访问: https://app.supabase.com/account/tokens
+   # 生成新的 access token（格式: sbp_xxx...）
+   ```
+
+2. **测试 Token**:
+   ```bash
+   export SUPABASE_ACCESS_TOKEN="your_correct_token"
+   npm run test-token
+   ```
+
+3. **下载 Functions**:
+   ```bash
+   npm run download-functions
+   ```
 
 ## 连接信息
 

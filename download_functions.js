@@ -49,8 +49,13 @@ function listFunctions() {
       console.log('supabase login --token "your_access_token_here"');
       console.log('\n获取 access token:');
       console.log('1. 访问: https://app.supabase.com/account/tokens');
-      console.log('2. 生成新的 access token');
+      console.log('2. 生成新的 access token（格式应为 sbp_xxx...）');
       console.log('3. 使用生成的 token');
+    } else if (error.stderr && error.stderr.includes('Invalid access token format')) {
+      console.log('\n❌ Access token 格式错误！');
+      console.log('正确的格式: sbp_0102...1920');
+      console.log('错误的格式: sb_secret_xxx... 或其他');
+      console.log('\n请确保从 https://app.supabase.com/account/tokens 获取正确的token');
     }
 
     return null;
