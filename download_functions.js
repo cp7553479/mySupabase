@@ -114,22 +114,40 @@ function main() {
 }
 
 function parseFunctionsFromOutput(output) {
-  // 这是一个简单的解析器，根据 supabase functions list 的输出格式
-  // 实际格式可能需要调整
+  console.log('解析函数列表...');
   const lines = output.split('\n');
   const functions = [];
 
+  // 跳过表头，找到数据行
+  let dataStarted = false;
+
   for (const line of lines) {
-    // 查找包含函数名称的行 (需要根据实际输出调整)
-    if (line.trim() && !line.includes('NAME') && !line.includes('STATUS') && line.length > 0) {
-      // 简单提取函数名称
-      const funcName = line.trim().split(/\s+/)[0];
-      if (funcName && funcName !== 'NAME' && funcName !== 'STATUS') {
-        functions.push(funcName);
+    const trimmed = line.trim();
+
+    // 跳过空行和表头
+    if (!trimmed || trimmed.includes('NAME') || trimmed.includes('STATUS') || trimmed.startsWith('-')) {
+      if (trimmed.includes('NAME') && trimmed.includes('STATUS')) {
+        dataStarted = true;
+      }
+      continue;
+    }
+
+    // 开始解析数据行
+    if (dataStarted && trimmed) {
+      // 分割行，提取函数名 (通常在第2列或第3列)
+      const columns = trimmed.split(/\s*\|\s*/);
+      if (columns.length >= 3) {
+        // 尝试不同的列位置
+        const funcName = columns[2] || columns[1]; // SLUG 列或 NAME 列
+        if (funcName && funcName !== 'SLUG' && funcName !== 'NAME' && funcName.length > 0) {
+          console.log(`发现函数: ${funcName}`);
+          functions.push(funcName);
+        }
       }
     }
   }
 
+  console.log(`总共发现 ${functions.length} 个函数:`, functions);
   return functions;
 }
 

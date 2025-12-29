@@ -18,9 +18,17 @@ mysupabase/
 ├── index.js                       # 项目主入口
 ├── supabase-client.js             # Supabase客户端连接
 ├── supabase/                      # Supabase 相关文件
-│   └── functions/                 # Edge Functions 源代码
-│       └── example-function/     # 示例 Edge Function
-│           └── index.ts
+│   ├── functions/                 # Edge Functions 源代码
+│   │   ├── _shared/              # 共享工具函数
+│   │   ├── deepseek-email-extract/  # DeepSeek邮件提取函数
+│   │   ├── process-product-images/  # 产品图片处理函数
+│   │   ├── feishu-webhook/       # 飞书Webhook函数
+│   │   ├── upsertDBFromBitable/  # 从飞书多维表格更新数据库
+│   │   ├── deleteDBFromBitable/  # 从飞书多维表格删除数据库记录
+│   │   ├── feishuListFields/     # 获取飞书字段列表
+│   │   ├── upsertBitableFromDB/  # 从数据库更新飞书多维表格
+│   │   └── delete-storage/       # 删除存储文件
+│   └── config.toml               # Supabase 本地开发配置
 ├── database_schema.json           # 数据库schema信息
 ├── download_supabase_data.py      # Python下载脚本 (已废弃)
 ├── python-requirements.txt        # Python依赖备份
@@ -50,8 +58,29 @@ mysupabase/
 - 当前状态: 无用户表，0个存储桶 (新项目)
 
 ### ✅ Edge Functions
-- 已创建示例 Edge Function: `supabase/functions/example-function/index.ts`
-- 包含基本的 HTTP 处理逻辑
+- ✅ **已下载真实云端函数** (8个函数 + 共享工具库)
+- 包含完整的业务逻辑和工具函数
+
+**已下载的 Edge Functions:**
+
+| 函数名 | 功能描述 | 版本 | 更新时间 |
+|--------|----------|------|----------|
+| `deepseek-email-extract` | 使用DeepSeek AI提取邮件内容 | v49 | 2025-10-03 |
+| `process-product-images` | 处理产品图片 | v43 | 2025-10-03 |
+| `feishu-webhook` | 飞书Webhook处理 | v56 | 2025-10-03 |
+| `upsertDBFromBitable` | 从飞书多维表格同步到数据库 | v24 | 2025-11-27 |
+| `deleteDBFromBitable` | 从飞书多维表格删除数据库记录 | v23 | 2025-10-03 |
+| `feishuListFields` | 获取飞书字段列表 | v48 | 2025-10-03 |
+| `upsertBitableFromDB` | 从数据库同步到飞书多维表格 | v50 | 2025-10-03 |
+| `delete-storage` | 删除存储文件 | v2 | 2025-10-10 |
+
+**共享工具库 (`_shared/`):**
+- `cors.ts` - CORS处理
+- `feishuCrypto.ts` - 飞书加密工具
+- `getDenoEnv.ts` - 环境变量获取
+- `larkClient.ts` - 飞书客户端
+- `supabaseClient.ts` - Supabase客户端
+- `transBitableRecordsToDB.ts` - 数据转换工具
 
 ## 使用方法
 
