@@ -1,8 +1,0 @@
-{
-  "tables": [],
-  "storage_buckets": [],
-  "metadata": {
-    "generated_at": "2025-12-29",
-    "note": "通过Supabase Python SDK获取的基础信息"
-  }
-}
