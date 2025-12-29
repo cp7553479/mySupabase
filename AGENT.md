@@ -47,13 +47,16 @@
 PI产品明细表，存储形式发票中的产品明细
 
 ### `product`
-产品表，存储外贸ERP商品信息
+产品表，存储外贸ERP商品信息。包含`Product_Number`字段（格式：LP+数字）和`WG商品编号`字段（格式：WG+数字，线索索引编号）
 
 ### `product_asi`
-Product for asi
+ASI产品表。通过`Product_Number`字段（格式：LP+数字）与`product`表关联
 
 ### `product_asi_upcharge`
-This is a duplicate of product_asi
+ASI产品附加费用子表。一个`product_asi`可对应多个upcharge项，通过外键关联
+
+### `product_asi_full_view`
+视图，用于下载符合ASI上传产品模板的查询结果
 
 ### `purchase_order_details`
 采购订单明细表，存储采购订单的产品明细
@@ -66,3 +69,9 @@ This is a duplicate of product_asi
 
 ### `vendors`
 供应商表，存储供应商基本信息
+
+## 表关系
+
+- `product` ↔ `product_asi`: 通过`Product_Number`字段（LP+数字格式）一对一关联
+- `product_asi` → `product_asi_upcharge`: 一对多，一个产品可对应多个附加费用项
+- `product_asi_full_view`: 视图，用于ASI产品模板导出查询
