@@ -1,17 +1,30 @@
 # Supabase 数据库表说明
 
-## 项目目的
+## ⚠️ 重要规则
 
-本项目用于管理 Supabase 实例，主要功能包括：
+**始终使用 Supabase CLI 来对本项目的 Supabase 实例进行操作。**
 
-- 外贸ERP系统数据管理
-- 客户和订单管理
-- 产品信息管理
-- 邮件和询单处理
-- 采购订单管理
-- 供应商管理
-- 与飞书多维表格的数据同步
-- Edge Functions 开发和部署
+所有数据库操作、schema 查询、函数部署等都必须通过 `supabase` CLI 命令执行，禁止使用其他方式（如直接连接数据库、使用第三方工具等）。
+
+## 项目结构
+
+本项目 Supabase 实例结构如下：
+
+**项目ID**: `hdwuwrozyaldnrdqzwwz`
+
+**主要组件**:
+- **数据库**: PostgreSQL (public schema)
+- **Edge Functions**: 8个生产级函数（位于 `supabase/functions/`）
+- **存储**: Supabase Storage
+- **认证**: Supabase Auth
+
+**业务领域**: 外贸ERP系统，包含客户管理、订单处理、产品管理、询单处理、采购管理、供应商管理等核心业务模块。
+
+**集成服务**:
+- 飞书多维表格双向同步
+- DeepSeek AI 邮件内容提取
+- 产品图片处理
+- Webhook 事件处理
 
 ## 数据库表结构
 
