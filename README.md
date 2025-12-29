@@ -36,31 +36,43 @@
 
 ### 环境要求
 - Node.js v16+
-- Supabase CLI v2.67.1
+- Supabase CLI
+
+### 安装 Supabase CLI
+```bash
+# macOS (使用Homebrew)
+brew install supabase/tap/supabase
+
+# 或下载二进制文件
+curl -L https://github.com/supabase/cli/releases/latest/download/supabase_darwin_arm64.tar.gz -o supabase.tar.gz
+tar -xzf supabase.tar.gz
+sudo mv supabase /usr/local/bin/
+# 或移动到用户目录: mv supabase ~/bin/
+```
 
 ### 启动本地环境
 ```bash
 # 启动 Supabase 本地服务
-~/bin/supabase start
+supabase start
 
 # 查看服务状态
-~/bin/supabase status
+supabase status
 ```
 
 ### 部署 Edge Functions
 ```bash
 # 部署特定函数
-~/bin/supabase functions deploy deepseek-email-extract
+supabase functions deploy deepseek-email-extract
 
 # 部署所有函数
 for func in deepseek-email-extract process-product-images feishu-webhook upsertDBFromBitable deleteDBFromBitable feishuListFields upsertBitableFromDB delete-storage; do
-  ~/bin/supabase functions deploy $func
+  supabase functions deploy $func
 done
 ```
 
 ### 停止本地服务
 ```bash
-~/bin/supabase stop
+supabase stop
 ```
 
 ## 项目结构
