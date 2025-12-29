@@ -28,9 +28,6 @@
 ### `email_templates`
 邮件模板表，存储邮件模板内容
 
-### `events`
-事件表，存储系统事件和操作日志
-
 ### `feishuBitable_Mapping`
 飞书多维表格映射表，存储数据库表与飞书表格的映射关系
 
