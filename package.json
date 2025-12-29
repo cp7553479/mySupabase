@@ -1,0 +1,28 @@
+{
+  "name": "mysupabase",
+  "version": "1.0.0",
+  "description": "我的 Supabase 项目，包含 Supabase 实例的连接信息和 Edge Functions 源代码。",
+  "main": "index.js",
+  "scripts": {
+    "test": "node supabase-client.js",
+    "test-connection": "node supabase-client.js",
+    "dev": "node index.js",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cp7553479/mySupabase.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/cp7553479/mySupabase/issues"
+  },
+  "homepage": "https://github.com/cp7553479/mySupabase#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.89.0",
+    "dotenv": "^17.2.3"
+  }
+}
