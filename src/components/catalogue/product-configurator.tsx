@@ -19,7 +19,7 @@ export function ProductConfigurator({
   productId,
 }: Readonly<ProductConfiguratorProps>) {
   const [quantity, setQuantity] = useState(minimumOrderQuantity ?? 1);
-  const [selections, setSelections] = useState<Record<string, string>>({});
+  const [selections, setSelections] = useState<Record<string, string[]>>({});
   const [message, setMessage] = useState<string | null>(null);
   const copy =
     locale === "zh"
@@ -28,6 +28,7 @@ export function ProductConfigurator({
           quantity: "采购数量",
           required: "请完成必填配置后加入询单列表。",
           minimum: "数量未达到起订量。",
+          maximum: "该配置已达到可选数量上限。",
           signIn: "请先登录，再将商品加入询单列表。",
           success: "商品已加入草稿询单。",
         }
@@ -37,6 +38,7 @@ export function ProductConfigurator({
           required:
             "Complete the required configuration before adding this item.",
           minimum: "The quantity is below the minimum order quantity.",
+          maximum: "This configuration has reached its selection limit.",
           signIn: "Sign in before adding this product to your enquiry list.",
           success: "Product added to your draft enquiry.",
         };
@@ -47,9 +49,13 @@ export function ProductConfigurator({
       return;
     }
 
-    const missingRequired = optionGroups.some(
-      (group) => group.isRequired && !selections[group.id],
-    );
+    const missingRequired = optionGroups.some((group) => {
+      const minimumSelections = Math.max(
+        group.minimumSelections,
+        group.isRequired ? 1 : 0,
+      );
+      return (selections[group.id]?.length ?? 0) < minimumSelections;
+    });
 
     if (missingRequired) {
       setMessage(copy.required);
@@ -60,11 +66,12 @@ export function ProductConfigurator({
       body: JSON.stringify({
         productId,
         quantity,
-        selections: Object.entries(selections).map(
-          ([optionGroupId, optionValueId]) => ({
-            optionGroupId,
-            optionValueId,
-          }),
+        selections: Object.entries(selections).flatMap(
+          ([optionGroupId, optionValueIds]) =>
+            optionValueIds.map((optionValueId) => ({
+              optionGroupId,
+              optionValueId,
+            })),
         ),
       }),
       headers: { "Content-Type": "application/json" },
@@ -83,6 +90,34 @@ export function ProductConfigurator({
     }
 
     setMessage(copy.success);
+  }
+
+  function toggleSelection(
+    groupId: string,
+    optionValueId: string,
+    inputType: CatalogueOptionGroup["inputType"],
+    maximumSelections: number | null,
+  ) {
+    setSelections((current) => {
+      const selected = current[groupId] ?? [];
+      if (inputType === "single_select") {
+        return { ...current, [groupId]: [optionValueId] };
+      }
+
+      if (selected.includes(optionValueId)) {
+        return {
+          ...current,
+          [groupId]: selected.filter((value) => value !== optionValueId),
+        };
+      }
+
+      if (maximumSelections !== null && selected.length >= maximumSelections) {
+        setMessage(copy.maximum);
+        return current;
+      }
+
+      return { ...current, [groupId]: [...selected, optionValueId] };
+    });
   }
 
   return (
@@ -111,17 +146,21 @@ export function ProductConfigurator({
           <div className="flex flex-wrap gap-2">
             {group.values.map((value) => (
               <Button
-                aria-pressed={selections[group.id] === value.id}
+                aria-pressed={selections[group.id]?.includes(value.id) ?? false}
                 key={value.id}
                 onClick={() =>
-                  setSelections((current) => ({
-                    ...current,
-                    [group.id]: value.id,
-                  }))
+                  toggleSelection(
+                    group.id,
+                    value.id,
+                    group.inputType,
+                    group.maximumSelections,
+                  )
                 }
                 type="button"
                 variant={
-                  selections[group.id] === value.id ? "default" : "outline"
+                  selections[group.id]?.includes(value.id)
+                    ? "default"
+                    : "outline"
                 }
               >
                 {value.label}

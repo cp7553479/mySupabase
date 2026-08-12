@@ -45,6 +45,8 @@ export type CatalogueOptionGroup = {
   inputType: "file" | "multi_select" | "number" | "single_select" | "text";
   isRequired: boolean;
   label: string;
+  maximumSelections: number | null;
+  minimumSelections: number;
   values: CatalogueOptionValue[];
 };
 
@@ -152,6 +154,8 @@ type ProductOptionGroupRow = {
   id: string;
   input_type: "file" | "multi_select" | "number" | "single_select" | "text";
   is_required: boolean;
+  maximum_selections: number | null;
+  minimum_selections: number;
   name: string;
   product_id: string;
 };
@@ -312,7 +316,7 @@ async function getPublishedProductRows(locale: string) {
     supabase
       .from("product_option_groups")
       .select(
-        "id, product_id, code, name, description, input_type, is_required",
+        "id, product_id, code, name, description, input_type, is_required, minimum_selections, maximum_selections",
       )
       .in("product_id", productIds)
       .eq("is_active", true)
@@ -479,6 +483,8 @@ function toCatalogueProducts(
         inputType: group.input_type,
         isRequired: group.is_required,
         label: group.name,
+        maximumSelections: group.maximum_selections,
+        minimumSelections: group.minimum_selections,
         values: rows.optionValues
           .filter((value) => value.option_group_id === group.id)
           .map((value) => ({ id: value.id, label: value.label })),

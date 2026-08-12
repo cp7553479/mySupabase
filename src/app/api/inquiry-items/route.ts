@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
 
+import {
+  type ProductOptionGroupConstraint,
+  type ProductOptionRule,
+  type ProductOptionSelection,
+  type ProductOptionValueReference,
+  validateProductOptionSelections,
+} from "@/lib/catalogue/option-validation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type AddInquiryItemRequest = {
@@ -24,15 +31,19 @@ type PriceTierRow = {
   unit_price: number;
 };
 
-type OptionGroupRow = { id: string; is_required: boolean; name: string };
+type OptionGroupRow = {
+  id: string;
+  is_required: boolean;
+  maximum_selections: number | null;
+  minimum_selections: number;
+  name: string;
+};
 
 type OptionValueRow = { id: string; label: string; option_group_id: string };
 
 type InquiryRow = { id: string; inquiry_number: string };
 
-function isSelection(
-  value: unknown,
-): value is { optionGroupId: string; optionValueId: string } {
+function isSelection(value: unknown): value is ProductOptionSelection {
   if (typeof value !== "object" || value === null) {
     return false;
   }
@@ -127,25 +138,23 @@ export async function POST(request: Request) {
     );
   }
 
-  const uniqueSelections = new Map(
-    selections.map((selection) => [selection.optionGroupId, selection]),
-  );
-  const selectedGroupIds = [...uniqueSelections.keys()];
-  const selectedValueIds = [...uniqueSelections.values()].map(
+  const uniqueSelections = [
+    ...new Map(
+      selections.map((selection) => [
+        `${selection.optionGroupId}:${selection.optionValueId}`,
+        selection,
+      ]),
+    ).values(),
+  ];
+  const selectedValueIds = uniqueSelections.map(
     (selection) => selection.optionValueId,
   );
-  const [groupsResult, valuesResult] = await Promise.all([
-    selectedGroupIds.length
-      ? supabase
-          .from("product_option_groups")
-          .select("id, name, is_required")
-          .eq("product_id", product.id)
-          .eq("is_active", true)
-      : supabase
-          .from("product_option_groups")
-          .select("id, name, is_required")
-          .eq("product_id", product.id)
-          .eq("is_active", true),
+  const [groupsResult, valuesResult, rulesResult] = await Promise.all([
+    supabase
+      .from("product_option_groups")
+      .select("id, name, is_required, minimum_selections, maximum_selections")
+      .eq("product_id", product.id)
+      .eq("is_active", true),
     selectedValueIds.length
       ? supabase
           .from("product_option_values")
@@ -153,27 +162,48 @@ export async function POST(request: Request) {
           .in("id", selectedValueIds)
           .eq("is_active", true)
       : Promise.resolve({ data: [], error: null }),
+    supabase
+      .from("product_option_rules")
+      .select(
+        "subject_option_value_id, related_option_value_id, rule_type, message",
+      )
+      .eq("product_id", product.id),
   ]);
-  const groups = groupsResult.data as OptionGroupRow[];
-  const values = valuesResult.data as OptionValueRow[];
+  const groups = (groupsResult.data ?? []) as OptionGroupRow[];
+  const values = (valuesResult.data ?? []) as OptionValueRow[];
+  const rules = (rulesResult.data ?? []).map((rule): ProductOptionRule => ({
+    message: rule.message,
+    relatedOptionValueId: rule.related_option_value_id,
+    ruleType: rule.rule_type,
+    subjectOptionValueId: rule.subject_option_value_id,
+  }));
+  const optionValidationError = validateProductOptionSelections(
+    groups.map((group): ProductOptionGroupConstraint => ({
+      id: group.id,
+      isRequired: group.is_required,
+      maximumSelections: group.maximum_selections,
+      minimumSelections: group.minimum_selections,
+    })),
+    values.map((value): ProductOptionValueReference => ({
+      id: value.id,
+      optionGroupId: value.option_group_id,
+    })),
+    uniqueSelections,
+    rules,
+  );
 
   if (
     groupsResult.error ||
     valuesResult.error ||
-    selectedGroupIds.some(
-      (groupId) => !groups.some((group) => group.id === groupId),
-    ) ||
-    groups.some(
-      (group) => group.is_required && !uniqueSelections.has(group.id),
-    ) ||
-    values.length !== selectedValueIds.length ||
-    values.some(
-      (value) =>
-        uniqueSelections.get(value.option_group_id)?.optionValueId !== value.id,
-    )
+    rulesResult.error ||
+    optionValidationError
   ) {
     return NextResponse.json(
-      { error: "One or more product options are unavailable." },
+      {
+        error:
+          optionValidationError ??
+          "One or more product options are unavailable or incompatible.",
+      },
       { status: 409 },
     );
   }
