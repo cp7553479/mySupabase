@@ -1,10 +1,12 @@
 import { cache } from "react";
 
+import { getPublishedCatalogueProducts } from "@/lib/catalogue/queries";
 import { createPublicSupabaseClient } from "@/lib/supabase/client";
 
 export type PublishedArticle = {
   body: string;
   excerpt: string | null;
+  id: string;
   publishedAt: string | null;
   seoDescription: string | null;
   seoTitle: string | null;
@@ -17,6 +19,10 @@ export type ContentTopic = {
   name: string;
   slug: string;
 };
+
+type PublishedCatalogueProduct = Awaited<
+  ReturnType<typeof getPublishedCatalogueProducts>
+>[number];
 
 export type PublicContentType =
   "blog" | "case_study" | "faq" | "page" | "resource";
@@ -60,6 +66,7 @@ function toArticle(
   return {
     body: translation?.body ?? entry.body ?? "",
     excerpt: translation?.excerpt ?? entry.excerpt,
+    id: entry.id,
     publishedAt: entry.published_at,
     seoDescription: translation?.seo_description ?? entry.seo_description,
     seoTitle: translation?.seo_title ?? entry.seo_title,
@@ -175,5 +182,38 @@ export const getPublishedArticleBySlug = cache(
   async (locale: string, slug: string) => {
     const articles = await getPublishedArticles(locale);
     return articles.find((article) => article.slug === slug) ?? null;
+  },
+);
+
+export const getPublishedContentProducts = cache(
+  async (
+    contentEntryId: string,
+    locale: string,
+  ): Promise<PublishedCatalogueProduct[]> => {
+    const supabase = createPublicSupabaseClient();
+    const { data, error } = await supabase
+      .from("content_products")
+      .select("product_id, sort_order")
+      .eq("content_entry_id", contentEntryId)
+      .order("sort_order");
+
+    if (error) {
+      throw new Error(`Could not read related products: ${error.message}`);
+    }
+
+    const links = data as { product_id: string; sort_order: number }[];
+    const productsById = new Map(
+      (await getPublishedCatalogueProducts(locale)).map((product) => [
+        product.id,
+        product,
+      ]),
+    );
+
+    return links
+      .map((link) => productsById.get(link.product_id))
+      .filter(
+        (product): product is PublishedCatalogueProduct =>
+          product !== undefined,
+      );
   },
 );

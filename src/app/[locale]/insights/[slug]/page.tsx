@@ -3,8 +3,12 @@ import { ArrowLeftIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { ProductCard } from "@/components/catalogue/product-card";
+import {
+  getPublishedArticleBySlug,
+  getPublishedContentProducts,
+} from "@/lib/content/queries";
 import { isLocale } from "@/lib/i18n";
-import { getPublishedArticleBySlug } from "@/lib/content/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -22,13 +26,18 @@ export default async function ArticlePage({
   if (!article) {
     notFound();
   }
+  const relatedProducts = await getPublishedContentProducts(article.id, locale);
+  const copy =
+    locale === "zh"
+      ? { allInsights: "全部洞察", relatedProducts: "相关商品" }
+      : { allInsights: "All insights", relatedProducts: "Related products" };
 
   return (
     <article className="mx-auto max-w-3xl px-5 py-16 lg:px-8 lg:py-24">
       <Button asChild variant="ghost">
         <Link href={`/${locale}/insights`}>
           <ArrowLeftIcon data-icon="inline-start" />
-          All insights
+          {copy.allInsights}
         </Link>
       </Button>
       <p className="text-muted-foreground mt-10 text-sm">
@@ -45,6 +54,16 @@ export default async function ArticlePage({
       <div className="mt-10 text-lg leading-8 whitespace-pre-line">
         {article.body}
       </div>
+      {relatedProducts.length ? (
+        <section className="mt-16 space-y-5">
+          <h2 className="text-2xl font-semibold">{copy.relatedProducts}</h2>
+          <div className="grid gap-5 md:grid-cols-2">
+            {relatedProducts.map((product) => (
+              <ProductCard key={product.id} locale={locale} product={product} />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </article>
   );
 }

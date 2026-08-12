@@ -166,6 +166,10 @@ test("published blog content is listed and rendered from Supabase", async ({
   await expect(
     page.getByText("A stronger enquiry begins with a clear product direction"),
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Related products" }),
+  ).toBeVisible();
+  await expect(page.getByText("Reinforced Handle Bag")).toBeVisible();
 });
 
 test("Chinese blog translations retain the original article content", async ({
