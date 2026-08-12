@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ export function DraftInquiryList({
 }: Readonly<DraftInquiryListProps>) {
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
   const copy =
     locale === "zh"
@@ -38,6 +39,13 @@ export function DraftInquiryList({
           remove: "移除",
           removeError: "暂时无法移除此商品，请稍后重试。",
           selectedOptions: "已选配置",
+          submit: "提交询单",
+          submitError: "暂时无法提交询单，请检查信息后重试。",
+          submitSuccess: "询单已提交。",
+          contactName: "联系人姓名",
+          contactEmail: "联系邮箱",
+          contactPhone: "联系电话",
+          message: "采购说明",
         }
       : {
           empty:
@@ -47,6 +55,14 @@ export function DraftInquiryList({
           remove: "Remove",
           removeError: "This product could not be removed. Please try again.",
           selectedOptions: "Selected options",
+          submit: "Submit enquiry",
+          submitError:
+            "This enquiry could not be submitted. Check the details and try again.",
+          submitSuccess: "Your enquiry has been submitted.",
+          contactName: "Contact name",
+          contactEmail: "Contact email",
+          contactPhone: "Contact phone",
+          message: "Procurement notes",
         };
 
   async function removeItem(itemId: string) {
@@ -63,6 +79,30 @@ export function DraftInquiryList({
     }
 
     router.refresh();
+  }
+
+  async function submitInquiry(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitting(true);
+    setMessage(null);
+    const form = new FormData(event.currentTarget);
+    const response = await fetch(`/api/inquiries/${inquiry?.id}/submit`, {
+      body: JSON.stringify({
+        contactEmail: form.get("contactEmail"),
+        contactName: form.get("contactName"),
+        contactPhone: form.get("contactPhone"),
+        message: form.get("message"),
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    });
+
+    setSubmitting(false);
+    setMessage(response.ok ? copy.submitSuccess : copy.submitError);
+
+    if (response.ok) {
+      router.refresh();
+    }
   }
 
   if (!inquiry || inquiry.items.length === 0) {
@@ -123,6 +163,47 @@ export function DraftInquiryList({
           {copy.estimated}: {formatPrice(estimatedTotal, currencyCode, locale)}
         </p>
       ) : null}
+      <form
+        className="space-y-4 rounded-xl border p-5"
+        onSubmit={submitInquiry}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="space-y-2 text-sm font-medium">
+            {copy.contactName}
+            <input
+              className="border-input h-9 w-full rounded-md border px-3"
+              name="contactName"
+              required
+            />
+          </label>
+          <label className="space-y-2 text-sm font-medium">
+            {copy.contactEmail}
+            <input
+              className="border-input h-9 w-full rounded-md border px-3"
+              name="contactEmail"
+              required
+              type="email"
+            />
+          </label>
+        </div>
+        <label className="block space-y-2 text-sm font-medium">
+          {copy.contactPhone}
+          <input
+            className="border-input h-9 w-full rounded-md border px-3"
+            name="contactPhone"
+          />
+        </label>
+        <label className="block space-y-2 text-sm font-medium">
+          {copy.message}
+          <textarea
+            className="border-input min-h-24 w-full rounded-md border p-3"
+            name="message"
+          />
+        </label>
+        <Button disabled={submitting} type="submit">
+          {copy.submit}
+        </Button>
+      </form>
       {message ? <p className="text-destructive text-sm">{message}</p> : null}
     </div>
   );

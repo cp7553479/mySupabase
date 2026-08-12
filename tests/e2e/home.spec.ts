@@ -288,3 +288,14 @@ test("draft enquiry items cannot be removed without an authenticated account", a
     error: "Authentication required.",
   });
 });
+
+test("submitting an enquiry requires an authenticated account", async ({
+  page,
+}) => {
+  const response = await page.request.post(
+    "/api/inquiries/00000000-0000-0000-0000-000000000000/submit",
+    { data: { contactEmail: "buyer@example.test", contactName: "Buyer" } },
+  );
+
+  expect(response.status()).toBe(401);
+});
