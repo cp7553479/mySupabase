@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ProductConfigurator } from "@/components/catalogue/product-configurator";
 import { getPublishedCatalogueProductBySlug } from "@/lib/catalogue/queries";
 import { isLocale } from "@/lib/i18n";
 
@@ -123,9 +124,11 @@ export default async function ProductDetailPage({
               ))}
             </div>
           </div>
-          <Button asChild className="w-full sm:w-auto">
-            <Link href={`/${locale}/inquiry`}>{copy.enquiry}</Link>
-          </Button>
+          <ProductConfigurator
+            locale={locale}
+            minimumOrderQuantity={product.minimumOrderQuantity}
+            optionGroups={product.optionGroups}
+          />
         </div>
       </div>
       {product.description ? (

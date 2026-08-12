@@ -194,9 +194,19 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
   await expect(page.getByText("Specifications")).toBeVisible();
   await expect(page.getByText("Length")).toBeVisible();
   await expect(page.getByText("Available services")).toBeVisible();
+  await page.getByRole("button", { name: "Add to enquiry list" }).click();
   await expect(
-    page.getByRole("link", { name: "Add to enquiry list" }),
+    page.getByText(
+      "Complete the required configuration before adding this item.",
+    ),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Full Color" }).click();
+  await page.getByRole("button", { name: "Add to enquiry list" }).click();
+  await expect(
+    page.getByText(
+      "Complete the required configuration before adding this item.",
+    ),
+  ).not.toBeVisible();
 
   await page.goto("/zh/products");
   await expect(
