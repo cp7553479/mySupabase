@@ -1,74 +1,50 @@
-# Environment variables
+# Dependencies
+/node_modules/
+/.pnp
+.pnp.*
+
+# Next.js and production output
+/.next/
+/out/
+/build/
+
+# Test output
+/coverage/
+/playwright-report/
+/test-results/
+
+# Environment variables: commit the documented template only
 .env
-.env.local
-.env.*.local
-.env.development
-.env.production
+.env.*
+!.env.example
 
-# Node.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.npm
-.yarn-integrity
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
+# Tool caches
+/.npm/
+/.vercel/
+*.tsbuildinfo
+next-env.d.ts
 
 # Logs
-logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
+pnpm-debug.log*
 
-# OS generated files
+# Editor and OS files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# IDE
-.vscode/
 .idea/
+.vscode/
+/.claude/
 *.swp
 *.swo
 *~
 
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# Supabase local state
+/.branches/
+/.supabase/
+/supabase/.temp/
 
-# Supabase
-.supabase/
-.branches
-.temp
-
-# Logs
-*.log
-logs/
-
-# Database
-*.db
-*.sqlite3
-
-# Temporary files
-*.tmp
-*.temp
+# Local project archives and task working notes
+/.archive/
+/.tasks/

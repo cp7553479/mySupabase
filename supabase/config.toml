@@ -1,0 +1,20 @@
+[functions.feishu-webhook]
+# 飞书 webhook 是外部推送请求，不携带 Supabase JWT，必须关闭此验证否则所有请求会被 401 拒绝
+verify_jwt = false
+
+[functions.asi-product-sync]
+# 飞书多维表格「记录变更」事件 webhook 推送，不携带 Supabase JWT，必须关闭
+verify_jwt = false
+
+[functions.bitable-subscribe]
+# 运维工具：激活/查询/取消对多维表格的事件订阅（仅内部调用）
+verify_jwt = false
+
+[functions.upsertDBFromBitable]
+# 内部函数，仅由服务端（feishu-webhook、队列消费者）调用
+# Supabase 网关的 legacy JWT 验证不接受 service_role key 作为 Bearer token，必须关闭
+verify_jwt = false
+
+[functions.upsertBitableFromDB]
+# 内部函数（DB→飞书方向），同上需关闭 JWT 验证
+verify_jwt = false
