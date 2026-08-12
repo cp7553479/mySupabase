@@ -68,3 +68,19 @@ test("mobile navigation exposes the catalogue and enquiry paths", async ({
       .getByRole("link", { name: "Products" }),
   ).toBeVisible();
 });
+
+test("company, contact and legal pages provide a consistent enquiry route", async ({
+  page,
+}) => {
+  for (const path of ["about", "contact", "privacy", "cookies", "terms"]) {
+    await page.goto(`/en/${path}`);
+    await expect(
+      page.getByRole("link", { name: "Start an enquiry" }).first(),
+    ).toBeVisible();
+  }
+
+  await page.goto("/en/contact");
+  await expect(
+    page.getByRole("link", { name: "hello@logopress.example" }).first(),
+  ).toBeVisible();
+});
