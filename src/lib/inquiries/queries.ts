@@ -23,9 +23,16 @@ export type DraftInquiry = {
 export type DraftInquiryAttachment = { filename: string; id: string };
 
 export type SubmittedInquiry = {
+  history: InquiryStatusEvent[];
   number: string;
   status: string;
   submittedAt: string | null;
+};
+
+export type InquiryStatusEvent = {
+  createdAt: string;
+  fromStatus: string | null;
+  toStatus: string;
 };
 
 type InquiryRow = { id: string; inquiry_number: string };
@@ -154,7 +161,7 @@ export async function getSubmittedInquiries(): Promise<SubmittedInquiry[]> {
 
   const { data, error } = await supabase
     .from("inquiries")
-    .select("inquiry_number, status, submitted_at")
+    .select("id, inquiry_number, status, submitted_at")
     .eq("customer_user_id", userId)
     .neq("status", "draft")
     .order("submitted_at", { ascending: false });
@@ -163,13 +170,44 @@ export async function getSubmittedInquiries(): Promise<SubmittedInquiry[]> {
     throw new Error(`Could not read submitted enquiries: ${error.message}`);
   }
 
-  return (
-    data as {
-      inquiry_number: string;
-      status: string;
-      submitted_at: string | null;
-    }[]
-  ).map((inquiry) => ({
+  const inquiries = data as {
+    id: string;
+    inquiry_number: string;
+    status: string;
+    submitted_at: string | null;
+  }[];
+  const inquiryIds = inquiries.map((inquiry) => inquiry.id);
+  const { data: historyData, error: historyError } = inquiryIds.length
+    ? await supabase
+        .from("inquiry_status_history")
+        .select("inquiry_id, from_status, to_status, created_at")
+        .in("inquiry_id", inquiryIds)
+        .eq("visible_to_customer", true)
+        .order("created_at")
+    : { data: [], error: null };
+
+  if (historyError) {
+    throw new Error(`Could not read enquiry history: ${historyError.message}`);
+  }
+
+  const historyByInquiryId = new Map<string, InquiryStatusEvent[]>();
+  for (const event of historyData as {
+    created_at: string;
+    from_status: string | null;
+    inquiry_id: string;
+    to_status: string;
+  }[]) {
+    const history = historyByInquiryId.get(event.inquiry_id) ?? [];
+    history.push({
+      createdAt: event.created_at,
+      fromStatus: event.from_status,
+      toStatus: event.to_status,
+    });
+    historyByInquiryId.set(event.inquiry_id, history);
+  }
+
+  return inquiries.map((inquiry) => ({
+    history: historyByInquiryId.get(inquiry.id) ?? [],
     number: inquiry.inquiry_number,
     status: inquiry.status,
     submittedAt: inquiry.submitted_at,
