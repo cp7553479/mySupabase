@@ -168,6 +168,13 @@ test("published blog content is listed and rendered from Supabase", async ({
   ).toBeVisible();
 });
 
+test("Chinese blog translations retain the original article content", async ({
+  page,
+}) => {
+  await page.goto("/zh/insights");
+  await expect(page.getByText("如何准备一份企业定制商品询单")).toBeVisible();
+});
+
 test("published cases, FAQ and resources are available from Supabase", async ({
   page,
 }) => {
