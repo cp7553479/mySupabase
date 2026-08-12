@@ -19,6 +19,12 @@ export type DraftInquiry = {
   number: string;
 };
 
+export type SubmittedInquiry = {
+  number: string;
+  status: string;
+  submittedAt: string | null;
+};
+
 type InquiryRow = { id: string; inquiry_number: string };
 
 type InquiryItemRow = {
@@ -117,4 +123,37 @@ export async function getCurrentDraftInquiry(): Promise<DraftInquiry | null> {
     })),
     number: inquiry.inquiry_number,
   };
+}
+
+export async function getSubmittedInquiries(): Promise<SubmittedInquiry[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims.sub;
+
+  if (typeof userId !== "string") {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("inquiries")
+    .select("inquiry_number, status, submitted_at")
+    .eq("customer_user_id", userId)
+    .neq("status", "draft")
+    .order("submitted_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Could not read submitted enquiries: ${error.message}`);
+  }
+
+  return (
+    data as {
+      inquiry_number: string;
+      status: string;
+      submitted_at: string | null;
+    }[]
+  ).map((inquiry) => ({
+    number: inquiry.inquiry_number,
+    status: inquiry.status,
+    submittedAt: inquiry.submitted_at,
+  }));
 }

@@ -355,6 +355,11 @@ test("submitting an enquiry requires an authenticated account", async ({
   expect(response.status()).toBe(401);
 });
 
+test("submitted enquiry history remains protected", async ({ page }) => {
+  await page.goto("/en/account/enquiries");
+  await expect(page).toHaveURL(/\/en\/account$/);
+});
+
 test("updating a profile requires an authenticated account", async ({
   page,
 }) => {

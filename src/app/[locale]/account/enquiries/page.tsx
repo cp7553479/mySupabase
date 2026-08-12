@@ -1,7 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 
 import { DraftInquiryList } from "@/components/inquiries/draft-inquiry-list";
-import { getCurrentDraftInquiry } from "@/lib/inquiries/queries";
+import { SubmittedInquiryList } from "@/components/inquiries/submitted-inquiry-list";
+import {
+  getCurrentDraftInquiry,
+  getSubmittedInquiries,
+} from "@/lib/inquiries/queries";
 import { isLocale } from "@/lib/i18n";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -23,7 +27,10 @@ export default async function AccountEnquiriesPage({
     redirect(`/${locale}/account`);
   }
 
-  const inquiry = await getCurrentDraftInquiry();
+  const [inquiry, submittedInquiries] = await Promise.all([
+    getCurrentDraftInquiry(),
+    getSubmittedInquiries(),
+  ]);
 
   return (
     <section className="mx-auto max-w-4xl px-5 py-16 lg:py-24">
@@ -36,6 +43,7 @@ export default async function AccountEnquiriesPage({
           : "Submitted enquiries, quotations and follow-up progress will appear here."}
       </p>
       <DraftInquiryList inquiry={inquiry} locale={locale} />
+      <SubmittedInquiryList inquiries={submittedInquiries} locale={locale} />
     </section>
   );
 }

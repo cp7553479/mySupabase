@@ -97,8 +97,17 @@ export function DraftInquiryList({
       method: "POST",
     });
 
+    const result = response.ok
+      ? ((await response.json()) as { inquiryNumber?: string })
+      : null;
     setSubmitting(false);
-    setMessage(response.ok ? copy.submitSuccess : copy.submitError);
+    setMessage(
+      response.ok && result?.inquiryNumber
+        ? `${copy.submitSuccess} ${result.inquiryNumber}`
+        : response.ok
+          ? copy.submitSuccess
+          : copy.submitError,
+    );
 
     if (response.ok) {
       router.refresh();
