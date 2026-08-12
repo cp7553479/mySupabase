@@ -20,7 +20,11 @@ export type DraftInquiry = {
   number: string;
 };
 
-export type DraftInquiryAttachment = { filename: string; id: string };
+export type DraftInquiryAttachment = {
+  filename: string;
+  id: string;
+  inquiryItemId: string | null;
+};
 
 export type SubmittedInquiry = {
   history: InquiryStatusEvent[];
@@ -52,7 +56,11 @@ type SelectionRow = {
   option_value_snapshot: string | null;
 };
 
-type AttachmentRow = { filename: string; id: string };
+type AttachmentRow = {
+  filename: string;
+  id: string;
+  inquiry_item_id: string | null;
+};
 
 export async function getCurrentDraftInquiry(): Promise<DraftInquiry | null> {
   const supabase = await createServerSupabaseClient();
@@ -114,7 +122,7 @@ export async function getCurrentDraftInquiry(): Promise<DraftInquiry | null> {
 
   const { data: attachmentsData, error: attachmentsError } = await supabase
     .from("inquiry_attachments")
-    .select("id, filename")
+    .select("id, filename, inquiry_item_id")
     .eq("inquiry_id", inquiry.id)
     .order("created_at");
 
@@ -125,7 +133,11 @@ export async function getCurrentDraftInquiry(): Promise<DraftInquiry | null> {
   }
 
   return {
-    attachments: attachmentsData as AttachmentRow[],
+    attachments: (attachmentsData as AttachmentRow[]).map((attachment) => ({
+      filename: attachment.filename,
+      id: attachment.id,
+      inquiryItemId: attachment.inquiry_item_id,
+    })),
     id: inquiry.id,
     items: items.map((item) => ({
       currencyCode: item.currency_code,

@@ -10,8 +10,9 @@ const maximumBytes = 25 * 1024 * 1024;
 
 export function InquiryAttachmentUpload({
   inquiryId,
+  inquiryItemId,
   locale,
-}: Readonly<{ inquiryId: string; locale: string }>) {
+}: Readonly<{ inquiryId: string; inquiryItemId?: string; locale: string }>) {
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const router = useRouter();
@@ -63,6 +64,7 @@ export function InquiryAttachmentUpload({
         attachmentKind: "reference",
         byteSize: file.size,
         filename: file.name,
+        inquiryItemId,
         mimeType: file.type,
         objectPath,
       }),

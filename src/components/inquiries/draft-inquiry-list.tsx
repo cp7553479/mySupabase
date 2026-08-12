@@ -51,6 +51,7 @@ export function DraftInquiryList({
           message: "采购说明",
           requiredDate: "期望交付日期",
           attachments: "询单附件",
+          itemAttachments: "商品附件",
           support: "需要的支持",
           sample: "需要样品",
           artworkProof: "需要效果图或确认稿",
@@ -76,6 +77,7 @@ export function DraftInquiryList({
           message: "Procurement notes",
           requiredDate: "Required delivery date",
           attachments: "Enquiry attachments",
+          itemAttachments: "Item attachments",
           support: "Support needed",
           sample: "Request samples",
           artworkProof: "Request artwork proof",
@@ -187,6 +189,24 @@ export function DraftInquiryList({
                 {copy.selectedOptions}: {item.options.join(" · ")}
               </p>
             ) : null}
+            <div className="space-y-3 rounded-lg border p-4">
+              <p className="text-sm font-medium">{copy.itemAttachments}</p>
+              <InquiryAttachmentUpload
+                inquiryId={inquiry.id}
+                inquiryItemId={item.id}
+                locale={locale}
+              />
+              {inquiry.attachments
+                .filter((attachment) => attachment.inquiryItemId === item.id)
+                .map((attachment) => (
+                  <p
+                    className="text-muted-foreground text-sm"
+                    key={attachment.id}
+                  >
+                    {attachment.filename}
+                  </p>
+                ))}
+            </div>
           </article>
         ))}
       </div>
@@ -200,9 +220,11 @@ export function DraftInquiryList({
         <InquiryAttachmentUpload inquiryId={inquiry.id} locale={locale} />
         {inquiry.attachments.length ? (
           <ul className="text-muted-foreground list-inside list-disc text-sm">
-            {inquiry.attachments.map((attachment) => (
-              <li key={attachment.id}>{attachment.filename}</li>
-            ))}
+            {inquiry.attachments
+              .filter((attachment) => attachment.inquiryItemId === null)
+              .map((attachment) => (
+                <li key={attachment.id}>{attachment.filename}</li>
+              ))}
           </ul>
         ) : null}
       </section>

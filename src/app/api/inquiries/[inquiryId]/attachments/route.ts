@@ -6,6 +6,7 @@ type AttachmentPayload = {
   attachmentKind?: unknown;
   byteSize?: unknown;
   filename?: unknown;
+  inquiryItemId?: unknown;
   mimeType?: unknown;
   objectPath?: unknown;
 };
@@ -40,6 +41,8 @@ export async function POST(
     attachmentKinds.has(payload.attachmentKind)
       ? payload.attachmentKind
       : "other";
+  const inquiryItemId =
+    typeof payload.inquiryItemId === "string" ? payload.inquiryItemId : null;
 
   if (typeof userId !== "string") {
     return NextResponse.json(
@@ -74,11 +77,28 @@ export async function POST(
     );
   }
 
+  if (inquiryItemId) {
+    const { data: item, error: itemError } = await supabase
+      .from("inquiry_items")
+      .select("id")
+      .eq("id", inquiryItemId)
+      .eq("inquiry_id", inquiryId)
+      .maybeSingle();
+
+    if (itemError || !item) {
+      return NextResponse.json(
+        { error: "Enquiry item is unavailable." },
+        { status: 404 },
+      );
+    }
+  }
+
   const { error } = await supabase.from("inquiry_attachments").insert({
     attachment_kind: attachmentKind,
     byte_size: byteSize,
     filename,
     inquiry_id: inquiryId,
+    inquiry_item_id: inquiryItemId,
     mime_type: typeof payload.mimeType === "string" ? payload.mimeType : null,
     object_path: objectPath,
     uploaded_by: userId,
