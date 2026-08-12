@@ -182,6 +182,16 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
   await page
     .getByRole("searchbox", { name: "Search products or product numbers" })
     .fill("");
+  await page
+    .getByRole("combobox", { name: "Sort products" })
+    .selectOption("price-desc");
+  await expect(
+    page
+      .locator('[data-slot="card"]')
+      .first()
+      .getByText("Multi Band Wireless Vintage Radio with Flashlight"),
+  ).toBeVisible();
+  await expect(page.getByText("Showing 1–4 of 4 products")).toBeVisible();
 
   await page
     .locator('[data-slot="card"]')
