@@ -35,6 +35,7 @@ export type CatalogueProductDetail = CatalogueProduct & {
   gallery: CatalogueMedia[];
   optionGroups: CatalogueOptionGroup[];
   priceTiers: CataloguePriceTier[];
+  relatedProductIds: string[];
   services: CatalogueService[];
   specifications: CatalogueSpecification[];
 };
@@ -177,6 +178,12 @@ type ProductOptionValueRow = {
   option_group_id: string;
 };
 
+type ProductRelatedRow = {
+  product_id: string;
+  related_product_id: string;
+  sort_order: number;
+};
+
 function applyTranslation(
   product: ProductRow,
   translation: ProductTranslationRow | undefined,
@@ -301,6 +308,7 @@ async function getPublishedProductRows(locale: string) {
       optionValues: [],
       productTaxonomyTerms: [],
       products: productRows,
+      relatedProducts: [],
       serviceDefinitions: [],
       services: [],
       specifications: [],
@@ -320,6 +328,7 @@ async function getPublishedProductRows(locale: string) {
     servicesResult,
     taxonomiesResult,
     optionGroupsResult,
+    relatedProductsResult,
   ] = await Promise.all([
     supabase
       .from("product_translations")
@@ -362,6 +371,11 @@ async function getPublishedProductRows(locale: string) {
       .in("product_id", productIds)
       .eq("is_active", true)
       .order("sort_order"),
+    supabase
+      .from("product_related_products")
+      .select("product_id, related_product_id, sort_order")
+      .in("product_id", productIds)
+      .order("sort_order"),
   ]);
 
   for (const result of [
@@ -373,6 +387,7 @@ async function getPublishedProductRows(locale: string) {
     servicesResult,
     taxonomiesResult,
     optionGroupsResult,
+    relatedProductsResult,
   ]) {
     if (result.error) {
       throw new Error(`Could not read catalogue data: ${result.error.message}`);
@@ -450,6 +465,7 @@ async function getPublishedProductRows(locale: string) {
     optionGroups,
     optionValues: optionValuesResult.data as ProductOptionValueRow[],
     products: productRows,
+    relatedProducts: relatedProductsResult.data as ProductRelatedRow[],
     productTaxonomyTerms,
     services: servicesResult.data as ProductServiceRow[],
     serviceDefinitions: serviceDefinitionsResult.data as ServiceRow[],
@@ -544,6 +560,10 @@ function toCatalogueProducts(
           .filter((value) => value.option_group_id === group.id)
           .map((value) => ({ id: value.id, label: value.label })),
       }));
+    const relatedProductIds = rows.relatedProducts
+      .filter((relation) => relation.product_id === product.id)
+      .sort((left, right) => left.sort_order - right.sort_order)
+      .map((relation) => relation.related_product_id);
 
     return {
       categories,
@@ -563,6 +583,7 @@ function toCatalogueProducts(
       description: translation.description,
       optionGroups,
       priceTiers,
+      relatedProductIds,
       services,
       specifications,
     };

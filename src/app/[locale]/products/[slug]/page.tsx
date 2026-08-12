@@ -62,6 +62,24 @@ export default async function ProductDetailPage({
     notFound();
   }
 
+  const relatedProducts = catalogue
+    .filter((candidate) => product.relatedProductIds.includes(candidate.id))
+    .sort(
+      (left, right) =>
+        product.relatedProductIds.indexOf(left.id) -
+        product.relatedProductIds.indexOf(right.id),
+    );
+  const suggestedProducts =
+    relatedProducts.length > 0
+      ? relatedProducts
+      : catalogue.filter(
+          (candidate) =>
+            candidate.id !== product.id &&
+            candidate.categories.some((category) =>
+              product.categories.includes(category),
+            ),
+        );
+
   const copy =
     locale === "zh"
       ? {
@@ -244,49 +262,34 @@ export default async function ProductDetailPage({
           </div>
         </section>
       ) : null}
-      {catalogue.filter(
-        (candidate) =>
-          candidate.id !== product.id &&
-          candidate.categories.some((category) =>
-            product.categories.includes(category),
-          ),
-      ).length > 0 ? (
+      {suggestedProducts.length > 0 ? (
         <section className="mt-16 space-y-5">
           <h2 className="text-2xl font-semibold">{copy.related}</h2>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {catalogue
-              .filter(
-                (candidate) =>
-                  candidate.id !== product.id &&
-                  candidate.categories.some((category) =>
-                    product.categories.includes(category),
-                  ),
-              )
-              .slice(0, 3)
-              .map((candidate) => (
-                <Link
-                  className="group hover:bg-muted rounded-xl border p-4 transition-colors"
-                  href={`/${locale}/products/${candidate.slug}`}
-                  key={candidate.id}
-                >
-                  {candidate.primaryImage ? (
-                    <div className="bg-muted relative aspect-square overflow-hidden rounded-lg">
-                      <Image
-                        alt={candidate.primaryImage.altText ?? candidate.name}
-                        className="object-cover transition-transform group-hover:scale-105"
-                        fill
-                        sizes="(max-width: 640px) 100vw, 20rem"
-                        src={candidate.primaryImage.url}
-                        unoptimized
-                      />
-                    </div>
-                  ) : null}
-                  <p className="mt-4 font-medium">{candidate.name}</p>
-                  <p className="text-muted-foreground mt-1 text-sm">
-                    {candidate.productNumber}
-                  </p>
-                </Link>
-              ))}
+            {suggestedProducts.slice(0, 3).map((candidate) => (
+              <Link
+                className="group hover:bg-muted rounded-xl border p-4 transition-colors"
+                href={`/${locale}/products/${candidate.slug}`}
+                key={candidate.id}
+              >
+                {candidate.primaryImage ? (
+                  <div className="bg-muted relative aspect-square overflow-hidden rounded-lg">
+                    <Image
+                      alt={candidate.primaryImage.altText ?? candidate.name}
+                      className="object-cover transition-transform group-hover:scale-105"
+                      fill
+                      sizes="(max-width: 640px) 100vw, 20rem"
+                      src={candidate.primaryImage.url}
+                      unoptimized
+                    />
+                  </div>
+                ) : null}
+                <p className="mt-4 font-medium">{candidate.name}</p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  {candidate.productNumber}
+                </p>
+              </Link>
+            ))}
           </div>
         </section>
       ) : null}
