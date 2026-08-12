@@ -81,6 +81,42 @@ export default async function AccountPage({
   const memberProfileById = new Map(
     (memberProfiles?.data ?? []).map((profile) => [profile.id, profile]),
   );
+  const accountStatus = profile?.data?.account_status ?? "pending";
+  const accountStatusCopy =
+    locale === "zh"
+      ? {
+          active: {
+            detail: "你的账户已启用，可以继续使用会员服务。",
+            label: "已启用",
+          },
+          pending: {
+            detail: "我们正在核对你的账户资料；审核完成后会更新账户状态。",
+            label: "待审核",
+          },
+          suspended: {
+            detail: "你的账户当前已暂停。如需协助，请通过联系页面与我们沟通。",
+            label: "已暂停",
+          },
+        }
+      : {
+          active: {
+            detail: "Your account is active and ready to use member services.",
+            label: "Active",
+          },
+          pending: {
+            detail:
+              "We are reviewing your account details and will update this status when the review is complete.",
+            label: "Pending review",
+          },
+          suspended: {
+            detail:
+              "Your account is currently suspended. Contact us through the contact page for assistance.",
+            label: "Suspended",
+          },
+        };
+  const accountStatusMessage =
+    accountStatusCopy[accountStatus as keyof typeof accountStatusCopy] ??
+    accountStatusCopy.pending;
 
   return (
     <section className="mx-auto max-w-md px-5 py-16 lg:py-24">
@@ -91,11 +127,16 @@ export default async function AccountPage({
             {locale === "zh" ? "当前已登录：" : "Signed in as: "}
             {email}
           </p>
-          <p className="text-sm font-medium">
-            {locale === "zh"
-              ? `账户状态：${profile?.data?.account_status === "active" ? "已审核" : "待审核"}`
-              : `Account status: ${profile?.data?.account_status ?? "pending"}`}
-          </p>
+          <div className="space-y-1 rounded-lg border p-4">
+            <p className="text-sm font-medium">
+              {locale === "zh"
+                ? `账户状态：${accountStatusMessage.label}`
+                : `Account status: ${accountStatusMessage.label}`}
+            </p>
+            <p className="text-muted-foreground text-sm leading-6">
+              {accountStatusMessage.detail}
+            </p>
+          </div>
           <ProfileForm
             fullName={profile?.data?.full_name ?? ""}
             locale={locale}
