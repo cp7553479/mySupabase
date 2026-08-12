@@ -175,6 +175,16 @@ test("Chinese blog translations retain the original article content", async ({
   await expect(page.getByText("如何准备一份企业定制商品询单")).toBeVisible();
 });
 
+test("blog topics filter the published article list", async ({ page }) => {
+  await page.goto("/en/insights?topic=pricing-guidance");
+  await expect(
+    page.getByText("Understanding quantity-tier pricing"),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Preparing a B2B custom-product enquiry"),
+  ).not.toBeVisible();
+});
+
 test("published cases, FAQ and resources are available from Supabase", async ({
   page,
 }) => {

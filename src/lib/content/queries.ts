@@ -10,6 +10,12 @@ export type PublishedArticle = {
   seoTitle: string | null;
   slug: string;
   title: string;
+  topics: ContentTopic[];
+};
+
+export type ContentTopic = {
+  name: string;
+  slug: string;
 };
 
 export type PublicContentType =
@@ -35,9 +41,21 @@ type ContentTranslationRow = {
   title: string;
 };
 
+type ContentTopicRelationRow = {
+  content_entry_id: string;
+  taxonomy_term_id: string;
+};
+
+type ContentTopicRow = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
 function toArticle(
   entry: ContentEntryRow,
   translation: ContentTranslationRow | undefined,
+  topics: ContentTopic[],
 ): PublishedArticle {
   return {
     body: translation?.body ?? entry.body ?? "",
@@ -47,6 +65,7 @@ function toArticle(
     seoTitle: translation?.seo_title ?? entry.seo_title,
     slug: entry.slug,
     title: translation?.title ?? entry.title,
+    topics,
   };
 }
 
@@ -93,8 +112,57 @@ export const getPublishedContent = cache(
       ]),
     );
 
+    const { data: topicRelations, error: topicRelationsError } = await supabase
+      .from("content_taxonomy_terms")
+      .select("content_entry_id, taxonomy_term_id")
+      .in(
+        "content_entry_id",
+        contentEntries.map((entry) => entry.id),
+      );
+
+    if (topicRelationsError) {
+      throw new Error(
+        `Could not read content topics: ${topicRelationsError.message}`,
+      );
+    }
+
+    const relations = topicRelations as ContentTopicRelationRow[];
+    const topicIds = [
+      ...new Set(relations.map((relation) => relation.taxonomy_term_id)),
+    ];
+    const { data: topicRows, error: topicRowsError } = topicIds.length
+      ? await supabase
+          .from("taxonomy_terms")
+          .select("id, name, slug")
+          .in("id", topicIds)
+      : { data: [], error: null };
+
+    if (topicRowsError) {
+      throw new Error(
+        `Could not read topic definitions: ${topicRowsError.message}`,
+      );
+    }
+
+    const topicById = new Map(
+      (topicRows as ContentTopicRow[]).map((topic) => [topic.id, topic]),
+    );
+    const topicsByEntryId = new Map<string, ContentTopic[]>();
+    for (const relation of relations) {
+      const topic = topicById.get(relation.taxonomy_term_id);
+      if (topic) {
+        const entryTopics =
+          topicsByEntryId.get(relation.content_entry_id) ?? [];
+        entryTopics.push({ name: topic.name, slug: topic.slug });
+        topicsByEntryId.set(relation.content_entry_id, entryTopics);
+      }
+    }
+
     return contentEntries.map((entry) =>
-      toArticle(entry, translationByEntryId.get(entry.id)),
+      toArticle(
+        entry,
+        translationByEntryId.get(entry.id),
+        topicsByEntryId.get(entry.id) ?? [],
+      ),
     );
   },
 );
