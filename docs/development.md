@@ -15,7 +15,7 @@
 - 涉及页面、路由或用户交互时，还必须运行 `npm run test:e2e`。当前健康检查只验证首页、页面标题和基础标题可见。
 - 业务功能完成时，应为关键业务规则补充单元/组件测试，并按已确认的用户主路径补充端到端测试；不得用未实现流程的占位断言代替。
 - 合并或发布前必须通过 `npm run verify`，即格式、Lint、类型、全部测试和生产构建均成功；不得保留 `.only`、无说明的跳过测试或真实密钥。
-- 测试不得依赖真实 Supabase 项目或生产数据。需要外部依赖时，应使用明确的测试环境或可控替身。
+- 单元测试使用可控替身；公开页面端到端测试使用当前已链接 Supabase 项目中的预览数据。涉及登录、写入或权限变更的端到端测试必须使用独立测试账号与可清理数据。
 
 ## 目录约定
 
@@ -36,3 +36,9 @@ Supabase CLI 是唯一远端迁移部署入口。当前任务没有生成 Drizzl
 - 本地认证使用 `.env.local` 中的公开 Supabase URL 与 Publishable Key。
 - 部署时，在 Supabase Auth 中配置正式站点地址，并允许 `/auth/confirm` 作为邮件确认回调地址。
 - 邮件确认模板使用 `/auth/confirm?token_hash={{ .TokenHash }}&type=email`，由应用完成会话交换后返回账户页。
+
+## Cloudflare Workers
+
+- Next.js 通过 `@opennextjs/cloudflare` 构建为 Workers 运行时；`wrangler.jsonc` 定义 Worker 名称、静态资源和兼容性配置。
+- `npm run preview` 在本地运行与线上一致的 Workers 预览；`npm run deploy` 由 Cloudflare GitHub 集成在生产分支合并后执行。
+- `.open-next/`、`.dev.vars` 和本机环境变量不提交。线上变量由 Cloudflare 管理，Supabase 生产密钥仅放在服务端变量中。

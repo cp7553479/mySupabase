@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { LanguagesIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { type Locale, locales } from "@/lib/i18n";
+import { localePreferenceCookie, type Locale, locales } from "@/lib/i18n";
 
 const labels: Record<Locale, string> = {
   en: "EN",
@@ -35,7 +35,12 @@ export function LanguageSwitcher({ locale }: { locale: Locale }) {
           size="sm"
           variant={candidate === locale ? "secondary" : "ghost"}
         >
-          <Link href={replaceLocale(pathname, candidate)}>
+          <Link
+            href={replaceLocale(pathname, candidate)}
+            onClick={() => {
+              document.cookie = `${localePreferenceCookie}=${candidate}; path=/; max-age=31536000; samesite=lax`;
+            }}
+          >
             {labels[candidate]}
           </Link>
         </Button>
