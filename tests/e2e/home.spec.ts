@@ -29,6 +29,24 @@ test("English homepage presents the public catalogue entry points", async ({
   ).toBeVisible();
 });
 
+test("cookie consent records the visitor choice", async ({ page }) => {
+  await page.goto("/en");
+  const consent = page.getByRole("complementary", { name: "Cookie consent" });
+  await expect(consent).toBeVisible();
+  await consent
+    .getByRole("button", { name: "Use necessary cookies only" })
+    .click();
+  await expect(consent).not.toBeVisible();
+  await expect
+    .poll(
+      async () =>
+        (await page.context().cookies()).find(
+          (cookie) => cookie.name === "logopress_cookie_consent",
+        )?.value,
+    )
+    .toBe("necessary");
+});
+
 test("root selects the default locale and the Chinese route renders its entry point", async ({
   page,
 }) => {

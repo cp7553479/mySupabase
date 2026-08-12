@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { CookieConsent } from "@/components/privacy/cookie-consent";
 import { isLocale, locales } from "@/lib/i18n";
 import { getPublicSiteData } from "@/lib/site/queries";
 
@@ -66,6 +67,7 @@ export default async function PublicLocaleLayout({
       />
       <main className="flex-1">{children}</main>
       <SiteFooter locale={requestedLocale} site={site} />
+      <CookieConsent locale={requestedLocale} />
     </div>
   );
 }
