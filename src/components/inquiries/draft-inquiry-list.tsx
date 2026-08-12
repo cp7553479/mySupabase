@@ -43,6 +43,9 @@ export function DraftInquiryList({
           update: "更新数量",
           updateError: "暂时无法更新数量，请检查起订量和价格档。",
           selectedOptions: "已选配置",
+          itemNote: "定制说明",
+          itemRequiredDate: "期望交期",
+          requestedServices: "已选服务",
           submit: "提交询单",
           submitError: "暂时无法提交询单，请检查信息后重试。",
           submitSuccess: "询单已提交。",
@@ -71,6 +74,9 @@ export function DraftInquiryList({
           updateError:
             "This quantity could not be updated. Check the minimum order quantity and price tier.",
           selectedOptions: "Selected options",
+          itemNote: "Customisation notes",
+          itemRequiredDate: "Requested delivery date",
+          requestedServices: "Requested services",
           submit: "Submit enquiry",
           submitError:
             "This enquiry could not be submitted. Check the details and try again.",
@@ -243,6 +249,21 @@ export function DraftInquiryList({
             {item.options.length > 0 ? (
               <p className="text-muted-foreground text-sm">
                 {copy.selectedOptions}: {item.options.join(" · ")}
+              </p>
+            ) : null}
+            {item.services.length > 0 ? (
+              <p className="text-muted-foreground text-sm">
+                {copy.requestedServices}: {item.services.join(" · ")}
+              </p>
+            ) : null}
+            {item.requiredDate ? (
+              <p className="text-muted-foreground text-sm">
+                {copy.itemRequiredDate}: {item.requiredDate}
+              </p>
+            ) : null}
+            {item.customerNote ? (
+              <p className="text-muted-foreground text-sm">
+                {copy.itemNote}: {item.customerNote}
               </p>
             ) : null}
             <div className="space-y-3 rounded-lg border p-4">

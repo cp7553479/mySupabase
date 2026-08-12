@@ -3,6 +3,7 @@ import "server-only";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type DraftInquiryItem = {
+  customerNote: string | null;
   currencyCode: string;
   estimatedTotal: number | null;
   id: string;
@@ -10,6 +11,8 @@ export type DraftInquiryItem = {
   options: string[];
   productNumber: string;
   quantity: number;
+  requiredDate: string | null;
+  services: string[];
   unitPrice: number | null;
 };
 
@@ -42,18 +45,27 @@ export type InquiryStatusEvent = {
 type InquiryRow = { id: string; inquiry_number: string };
 
 type InquiryItemRow = {
+  customer_note: string | null;
   currency_code: string;
   estimated_total_snapshot: number | null;
   id: string;
   product_name_snapshot: string;
   product_number_snapshot: string;
   quantity: number;
+  required_date: string | null;
   unit_price_snapshot: number | null;
 };
 
 type SelectionRow = {
+  entered_value: string | null;
   inquiry_item_id: string;
+  option_group_name_snapshot: string;
   option_value_snapshot: string | null;
+};
+
+type ServiceRequestRow = {
+  inquiry_item_id: string;
+  service_name_snapshot: string;
 };
 
 type AttachmentRow = {
@@ -92,7 +104,7 @@ export async function getCurrentDraftInquiry(): Promise<DraftInquiry | null> {
   const { data: itemsData, error: itemsError } = await supabase
     .from("inquiry_items")
     .select(
-      "id, product_number_snapshot, product_name_snapshot, quantity, currency_code, unit_price_snapshot, estimated_total_snapshot",
+      "id, product_number_snapshot, product_name_snapshot, quantity, currency_code, unit_price_snapshot, estimated_total_snapshot, customer_note, required_date",
     )
     .eq("inquiry_id", inquiry.id)
     .order("sort_order");
@@ -108,7 +120,9 @@ export async function getCurrentDraftInquiry(): Promise<DraftInquiry | null> {
   const { data: selectionsData, error: selectionsError } = itemIds.length
     ? await supabase
         .from("inquiry_item_option_selections")
-        .select("inquiry_item_id, option_value_snapshot")
+        .select(
+          "inquiry_item_id, option_group_name_snapshot, option_value_snapshot, entered_value",
+        )
         .in("inquiry_item_id", itemIds)
         .order("sort_order")
     : { data: [], error: null };
@@ -117,6 +131,21 @@ export async function getCurrentDraftInquiry(): Promise<DraftInquiry | null> {
   if (selectionsError) {
     throw new Error(
       `Could not read draft enquiry options: ${selectionsError.message}`,
+    );
+  }
+
+  const { data: serviceRequestsData, error: serviceRequestsError } =
+    itemIds.length
+      ? await supabase
+          .from("inquiry_item_service_requests")
+          .select("inquiry_item_id, service_name_snapshot")
+          .in("inquiry_item_id", itemIds)
+          .order("created_at")
+      : { data: [], error: null };
+
+  if (serviceRequestsError) {
+    throw new Error(
+      `Could not read draft enquiry services: ${serviceRequestsError.message}`,
     );
   }
 
@@ -140,6 +169,7 @@ export async function getCurrentDraftInquiry(): Promise<DraftInquiry | null> {
     })),
     id: inquiry.id,
     items: items.map((item) => ({
+      customerNote: item.customer_note,
       currencyCode: item.currency_code,
       estimatedTotal:
         item.estimated_total_snapshot === null
@@ -149,10 +179,18 @@ export async function getCurrentDraftInquiry(): Promise<DraftInquiry | null> {
       name: item.product_name_snapshot,
       options: selections
         .filter((selection) => selection.inquiry_item_id === item.id)
-        .map((selection) => selection.option_value_snapshot)
+        .map((selection) =>
+          (selection.option_value_snapshot ?? selection.entered_value)
+            ? `${selection.option_group_name_snapshot}: ${selection.option_value_snapshot ?? selection.entered_value}`
+            : null,
+        )
         .filter((value): value is string => value !== null),
       productNumber: item.product_number_snapshot,
       quantity: item.quantity,
+      requiredDate: item.required_date,
+      services: (serviceRequestsData as ServiceRequestRow[])
+        .filter((service) => service.inquiry_item_id === item.id)
+        .map((service) => service.service_name_snapshot),
       unitPrice:
         item.unit_price_snapshot === null
           ? null
