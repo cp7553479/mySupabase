@@ -9,6 +9,9 @@ type SubmitInquiryRequest = {
   deliveryCountryCode?: unknown;
   intendedUse?: unknown;
   message?: unknown;
+  needsArtworkProof?: unknown;
+  needsDesignSupport?: unknown;
+  needsSample?: unknown;
   requiredDate?: unknown;
 };
 
@@ -85,6 +88,9 @@ export async function POST(
       customer_message: message,
       delivery_country_code: deliveryCountryCode,
       intended_use: intendedUse,
+      needs_artwork_proof: payload.needsArtworkProof === true,
+      needs_design_support: payload.needsDesignSupport === true,
+      needs_sample: payload.needsSample === true,
       required_date: requiredDate,
       status: "submitted",
       submitted_at: new Date().toISOString(),

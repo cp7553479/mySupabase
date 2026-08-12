@@ -51,6 +51,10 @@ export function DraftInquiryList({
           message: "采购说明",
           requiredDate: "期望交付日期",
           attachments: "询单附件",
+          support: "需要的支持",
+          sample: "需要样品",
+          artworkProof: "需要效果图或确认稿",
+          designSupport: "需要设计支持",
         }
       : {
           empty:
@@ -72,6 +76,10 @@ export function DraftInquiryList({
           message: "Procurement notes",
           requiredDate: "Required delivery date",
           attachments: "Enquiry attachments",
+          support: "Support needed",
+          sample: "Request samples",
+          artworkProof: "Request artwork proof",
+          designSupport: "Request design support",
         };
 
   async function removeItem(itemId: string) {
@@ -103,6 +111,9 @@ export function DraftInquiryList({
         deliveryCountryCode: form.get("deliveryCountryCode"),
         intendedUse: form.get("intendedUse"),
         message: form.get("message"),
+        needsArtworkProof: form.get("needsArtworkProof") === "on",
+        needsDesignSupport: form.get("needsDesignSupport") === "on",
+        needsSample: form.get("needsSample") === "on",
         requiredDate: form.get("requiredDate"),
       }),
       headers: { "Content-Type": "application/json" },
@@ -259,6 +270,23 @@ export function DraftInquiryList({
             name="message"
           />
         </label>
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-medium">{copy.support}</legend>
+          <div className="flex flex-wrap gap-x-5 gap-y-3 text-sm">
+            <label className="flex items-center gap-2">
+              <input name="needsSample" type="checkbox" />
+              {copy.sample}
+            </label>
+            <label className="flex items-center gap-2">
+              <input name="needsArtworkProof" type="checkbox" />
+              {copy.artworkProof}
+            </label>
+            <label className="flex items-center gap-2">
+              <input name="needsDesignSupport" type="checkbox" />
+              {copy.designSupport}
+            </label>
+          </div>
+        </fieldset>
         <Button disabled={submitting} type="submit">
           {copy.submit}
         </Button>
