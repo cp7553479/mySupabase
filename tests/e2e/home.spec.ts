@@ -275,6 +275,16 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
   ).toBeVisible();
   await page.getByRole("button", { name: "Save product" }).click();
   await expect(page.getByText("Sign in to save products.")).toBeVisible();
+  await page.getByRole("button", { name: "Add to compare" }).click();
+  await expect(
+    page.getByRole("button", { name: "Remove from compare" }),
+  ).toBeVisible();
+  await page.goto("/en/products/compare");
+  await expect(
+    page.getByText(
+      "Add two or more products from their detail pages to compare specifications, minimum order quantities, pricing and services.",
+    ),
+  ).toBeVisible();
 
   await page.goto("/zh/products");
   await expect(

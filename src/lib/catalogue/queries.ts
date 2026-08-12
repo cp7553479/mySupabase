@@ -498,13 +498,19 @@ export const getPublishedCatalogueProducts = cache(async (locale: string) => {
   }));
 });
 
+export const getPublishedCatalogueProductDetails = cache(
+  async (locale: string): Promise<CatalogueProductDetail[]> => {
+    const rows = await getPublishedProductRows(locale);
+    return toCatalogueProducts(rows);
+  },
+);
+
 export const getPublishedCatalogueProductBySlug = cache(
   async (
     locale: string,
     slug: string,
   ): Promise<CatalogueProductDetail | null> => {
-    const rows = await getPublishedProductRows(locale);
-    const product = toCatalogueProducts(rows).find(
+    const product = (await getPublishedCatalogueProductDetails(locale)).find(
       (candidate) => candidate.slug === slug,
     );
 

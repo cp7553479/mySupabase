@@ -4,6 +4,7 @@ import { SearchIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { ProductCard } from "@/components/catalogue/product-card";
+import { ComparisonLink } from "@/components/catalogue/comparison-link";
 import { Button } from "@/components/ui/button";
 import type { CatalogueProduct } from "@/lib/catalogue/queries";
 
@@ -162,6 +163,7 @@ export function CatalogueBrowser({
           </select>
         </label>
       </div>
+      <ComparisonLink locale={locale} />
       {visibleProducts.length > 0 ? (
         <>
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
