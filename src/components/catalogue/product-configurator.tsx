@@ -185,7 +185,10 @@ export function ProductConfigurator({
         />
       </label>
       {activeTier ? (
-        <div className="bg-muted/30 grid gap-3 rounded-lg border p-4 text-sm sm:grid-cols-2">
+        <div
+          aria-live="polite"
+          className="bg-muted/30 grid gap-3 rounded-lg border p-4 text-sm sm:grid-cols-2"
+        >
           <div>
             <p className="text-muted-foreground">{copy.applicablePrice}</p>
             <p className="mt-1 font-semibold">

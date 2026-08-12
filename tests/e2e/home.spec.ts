@@ -318,6 +318,9 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
   ).toBeVisible();
   await expect(page.getByText("Applicable tier price")).toBeVisible();
   await expect(page.getByText("Current estimated item total")).toBeVisible();
+  await expect(page.getByText("$698.50")).toBeVisible();
+  await page.getByLabel("Quantity").fill("100");
+  await expect(page.getByText("$1,371.00")).toBeVisible();
   const rushProduction = page.getByRole("button", {
     name: "Rush Production (5 days)",
   });
