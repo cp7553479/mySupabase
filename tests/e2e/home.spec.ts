@@ -404,6 +404,15 @@ test("anonymous visitors are sent to account sign-in before viewing enquiries", 
   await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
 });
 
+test("anonymous visitors cannot enter the administration area", async ({
+  page,
+}) => {
+  await page.goto("/en/admin");
+
+  await expect(page).toHaveURL(/\/en\/account$/);
+  await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+});
+
 test("the enquiry API requires an authenticated account", async ({ page }) => {
   const response = await page.request.post("/api/inquiry-items", {
     data: {
