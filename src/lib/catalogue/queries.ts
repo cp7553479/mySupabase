@@ -4,6 +4,7 @@ import { getSupabasePublicEnvironment } from "@/lib/env/public";
 import { createPublicSupabaseClient } from "@/lib/supabase/client";
 
 export type CatalogueProduct = {
+  filterAttributes: CatalogueFilterAttribute[];
   categories: string[];
   currencyCode: string;
   id: string;
@@ -53,6 +54,11 @@ export type CatalogueSpecification = {
   group: string | null;
   name: string;
   unit: string | null;
+  value: string;
+};
+
+export type CatalogueFilterAttribute = {
+  name: string;
   value: string;
 };
 
@@ -121,6 +127,7 @@ type TaxonomyTermRow = {
 };
 
 type ProductSpecificationRow = {
+  is_filterable: boolean;
   name: string;
   product_id: string;
   sort_order: number;
@@ -291,7 +298,9 @@ async function getPublishedProductRows(locale: string) {
       .order("sort_order"),
     supabase
       .from("product_specifications")
-      .select("product_id, specification_group, name, value, unit, sort_order")
+      .select(
+        "product_id, specification_group, name, value, unit, is_filterable, sort_order",
+      )
       .in("product_id", productIds)
       .order("sort_order"),
     supabase
@@ -447,6 +456,16 @@ function toCatalogueProducts(
         unit: specification.unit,
         value: specification.value,
       }));
+    const filterAttributes = rows.specifications
+      .filter(
+        (specification) =>
+          specification.product_id === product.id &&
+          specification.is_filterable,
+      )
+      .map((specification) => ({
+        name: specification.name,
+        value: specification.value,
+      }));
     const services = rows.services
       .filter((service) => service.product_id === product.id)
       .map((service) => serviceNamesByCode.get(service.service_code))
@@ -469,6 +488,7 @@ function toCatalogueProducts(
       categories,
       currencyCode: product.default_currency_code,
       id: product.id,
+      filterAttributes,
       minimumOrderQuantity: product.minimum_order_quantity,
       name: translation.name,
       primaryImage: toMedia(product.id, mediaById, rows.media),
@@ -494,6 +514,7 @@ export const getPublishedCatalogueProducts = cache(async (locale: string) => {
     categories: product.categories,
     currencyCode: product.currencyCode,
     id: product.id,
+    filterAttributes: product.filterAttributes,
     minimumOrderQuantity: product.minimumOrderQuantity,
     name: product.name,
     primaryImage: product.primaryImage,

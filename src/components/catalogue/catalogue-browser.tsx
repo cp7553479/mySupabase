@@ -23,12 +23,29 @@ export function CatalogueBrowser({
 }: Readonly<CatalogueBrowserProps>) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
+  const [attribute, setAttribute] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<SortMode>("name");
   const categories = useMemo(
     () =>
       [...new Set(products.flatMap((product) => product.categories))].sort(),
     [products],
+  );
+  const attributes = useMemo(
+    () =>
+      [
+        ...new Map(
+          products
+            .flatMap((product) => product.filterAttributes)
+            .map((item) => [JSON.stringify([item.name, item.value]), item]),
+        ).values(),
+      ].sort((left, right) =>
+        `${left.name}: ${left.value}`.localeCompare(
+          `${right.name}: ${right.value}`,
+          locale,
+        ),
+      ),
+    [locale, products],
   );
   const visibleProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
@@ -37,6 +54,11 @@ export function CatalogueBrowser({
       .filter((product) => {
         const matchesCategory =
           !category || product.categories.includes(category);
+        const matchesAttribute =
+          !attribute ||
+          product.filterAttributes.some(
+            (item) => JSON.stringify([item.name, item.value]) === attribute,
+          );
         const matchesQuery =
           !normalizedQuery ||
           [product.name, product.productNumber, product.summary]
@@ -45,7 +67,7 @@ export function CatalogueBrowser({
               value.toLocaleLowerCase().includes(normalizedQuery),
             );
 
-        return matchesCategory && matchesQuery;
+        return matchesAttribute && matchesCategory && matchesQuery;
       })
       .sort((left, right) => {
         if (sort === "price-asc") {
@@ -63,7 +85,7 @@ export function CatalogueBrowser({
 
         return left.name.localeCompare(right.name, locale);
       });
-  }, [category, locale, products, query, sort]);
+  }, [attribute, category, locale, products, query, sort]);
   const pageCount = Math.max(1, Math.ceil(visibleProducts.length / pageSize));
   const currentPage = Math.min(page, pageCount);
   const paginatedProducts = visibleProducts.slice(
@@ -74,6 +96,8 @@ export function CatalogueBrowser({
     locale === "zh"
       ? {
           all: "全部商品",
+          attribute: "按属性筛选",
+          allAttributes: "全部属性",
           empty: "没有符合当前条件的商品。",
           next: "下一页",
           pagination: "显示 {start}–{end}，共 {total} 个商品",
@@ -86,6 +110,8 @@ export function CatalogueBrowser({
         }
       : {
           all: "All products",
+          attribute: "Filter by attribute",
+          allAttributes: "All attributes",
           empty: "No products match the current selection.",
           next: "Next page",
           pagination: "Showing {start}–{end} of {total} products",
@@ -146,22 +172,48 @@ export function CatalogueBrowser({
             </Button>
           ))}
         </div>
-        <label className="flex items-center gap-3 text-sm font-medium">
-          {labels.sort}
-          <select
-            aria-label={labels.sort}
-            className="border-input bg-background h-9 rounded-md border px-3 text-sm"
-            onChange={(event) => {
-              setPage(1);
-              setSort(event.target.value as SortMode);
-            }}
-            value={sort}
-          >
-            <option value="name">{labels.sortName}</option>
-            <option value="price-asc">{labels.sortPriceAsc}</option>
-            <option value="price-desc">{labels.sortPriceDesc}</option>
-          </select>
-        </label>
+        <div className="flex flex-wrap items-center gap-3">
+          {attributes.length > 0 ? (
+            <label className="flex items-center gap-3 text-sm font-medium">
+              {labels.attribute}
+              <select
+                aria-label={labels.attribute}
+                className="border-input bg-background h-9 rounded-md border px-3 text-sm"
+                onChange={(event) => {
+                  setAttribute(event.target.value || null);
+                  setPage(1);
+                }}
+                value={attribute ?? ""}
+              >
+                <option value="">{labels.allAttributes}</option>
+                {attributes.map((item) => {
+                  const value = JSON.stringify([item.name, item.value]);
+                  return (
+                    <option key={value} value={value}>
+                      {item.name}: {item.value}
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
+          ) : null}
+          <label className="flex items-center gap-3 text-sm font-medium">
+            {labels.sort}
+            <select
+              aria-label={labels.sort}
+              className="border-input bg-background h-9 rounded-md border px-3 text-sm"
+              onChange={(event) => {
+                setPage(1);
+                setSort(event.target.value as SortMode);
+              }}
+              value={sort}
+            >
+              <option value="name">{labels.sortName}</option>
+              <option value="price-asc">{labels.sortPriceAsc}</option>
+              <option value="price-desc">{labels.sortPriceDesc}</option>
+            </select>
+          </label>
+        </div>
       </div>
       <ComparisonLink locale={locale} />
       {visibleProducts.length > 0 ? (

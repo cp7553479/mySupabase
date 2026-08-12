@@ -232,9 +232,17 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
 
   await page.getByRole("button", { name: "Shopping Bags" }).click();
   await expect(page.getByText("Reinforced Handle Bag")).toBeVisible();
-  await expect(
-    page.getByText("Multi Band Wireless Vintage Radio with Flashlight"),
-  ).not.toBeVisible();
+  await expect(page.getByText("BPA-Free Plastic Cup")).not.toBeVisible();
+  await page.getByRole("button", { name: "All products" }).click();
+  await page.getByRole("button", { name: "Plastic Cups" }).click();
+  await page
+    .getByRole("combobox", { name: "Filter by attribute" })
+    .selectOption({ label: "Volume: 16" });
+  await expect(page.getByText("BPA-Free Plastic Cup")).toBeVisible();
+  await expect(page.getByText("Showing 1–1 of 1 products")).toBeVisible();
+  await page
+    .getByRole("combobox", { name: "Filter by attribute" })
+    .selectOption("");
   await page.getByRole("button", { name: "All products" }).click();
   await page
     .getByRole("searchbox", { name: "Search products or product numbers" })
