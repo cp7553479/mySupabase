@@ -363,3 +363,13 @@ test("updating a profile requires an authenticated account", async ({
   });
   expect(response.status()).toBe(401);
 });
+
+test("creating a company profile requires an authenticated account", async ({
+  page,
+}) => {
+  const response = await page.request.post("/api/account/organization", {
+    data: { name: "Example Company" },
+  });
+
+  expect(response.status()).toBe(401);
+});

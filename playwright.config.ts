@@ -9,7 +9,7 @@ export default defineConfig({
   use: { baseURL: `http://127.0.0.1:${port}`, trace: "on-first-retry" },
   webServer: {
     command: `npm run dev -- --hostname 127.0.0.1 --port ${port}`,
-    url: `http://127.0.0.1:${port}`,
+    url: `http://127.0.0.1:${port}/en`,
     reuseExistingServer: !process.env.CI,
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],

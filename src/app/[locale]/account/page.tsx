@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AuthForm } from "@/components/account/auth-form";
+import { OrganizationForm } from "@/components/account/organization-form";
 import { ProfileForm } from "@/components/account/profile-form";
 import { SignOutButton } from "@/components/account/sign-out-button";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,23 @@ export default async function AccountPage({
           .select("full_name, phone, account_status")
           .maybeSingle()
       : null;
+  const organization =
+    typeof email === "string"
+      ? await supabase
+          .from("organization_members")
+          .select("organization_id, organizations(name, industry, website)")
+          .eq("user_id", data?.claims.sub ?? "")
+          .eq("status", "active")
+          .limit(1)
+          .maybeSingle()
+      : null;
+  const organizationDetails = organization?.data as {
+    organizations: {
+      industry: string | null;
+      name: string;
+      website: string | null;
+    } | null;
+  } | null;
 
   return (
     <section className="mx-auto max-w-md px-5 py-16 lg:py-24">
@@ -49,6 +67,12 @@ export default async function AccountPage({
             fullName={profile?.data?.full_name ?? ""}
             locale={locale}
             phone={profile?.data?.phone ?? ""}
+          />
+          <OrganizationForm
+            industry={organizationDetails?.organizations?.industry ?? ""}
+            locale={locale}
+            name={organizationDetails?.organizations?.name ?? ""}
+            website={organizationDetails?.organizations?.website ?? ""}
           />
           <div className="flex flex-wrap gap-3">
             <Button asChild>
