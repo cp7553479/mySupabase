@@ -11,6 +11,8 @@ export type CatalogueProduct = {
   name: string;
   primaryImage: CatalogueMedia | null;
   productNumber: string;
+  productionLeadTimeMaxDays: number | null;
+  productionLeadTimeMinDays: number | null;
   slug: string;
   startingPrice: number | null;
   summary: string | null;
@@ -61,6 +63,8 @@ type ProductRow = {
   minimum_order_quantity: number | null;
   name: string;
   product_number: string;
+  production_lead_time_max_days: number | null;
+  production_lead_time_min_days: number | null;
   short_description: string | null;
   slug: string;
 };
@@ -222,7 +226,7 @@ async function getPublishedProductRows(locale: string) {
   const { data: products, error: productsError } = await supabase
     .from("products")
     .select(
-      "id, product_number, slug, name, short_description, description, default_currency_code, minimum_order_quantity",
+      "id, product_number, slug, name, short_description, description, default_currency_code, minimum_order_quantity, production_lead_time_min_days, production_lead_time_max_days",
     )
     .eq("status", "published")
     .order("product_number");
@@ -469,6 +473,8 @@ function toCatalogueProducts(
       name: translation.name,
       primaryImage: toMedia(product.id, mediaById, rows.media),
       productNumber: product.product_number,
+      productionLeadTimeMaxDays: product.production_lead_time_max_days,
+      productionLeadTimeMinDays: product.production_lead_time_min_days,
       slug: product.slug,
       startingPrice: priceTiers[0]?.unitPrice ?? null,
       summary: translation.summary,
@@ -492,6 +498,8 @@ export const getPublishedCatalogueProducts = cache(async (locale: string) => {
     name: product.name,
     primaryImage: product.primaryImage,
     productNumber: product.productNumber,
+    productionLeadTimeMaxDays: product.productionLeadTimeMaxDays,
+    productionLeadTimeMinDays: product.productionLeadTimeMinDays,
     slug: product.slug,
     startingPrice: product.startingPrice,
     summary: product.summary,

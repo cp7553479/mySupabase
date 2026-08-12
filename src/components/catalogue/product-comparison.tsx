@@ -22,6 +22,26 @@ function formatPrice(amount: number, currencyCode: string, locale: string) {
   }).format(amount);
 }
 
+function formatLeadTime(
+  minimumDays: number | null,
+  maximumDays: number | null,
+  locale: string,
+) {
+  const days = locale === "zh" ? "天" : "days";
+  const pending = locale === "zh" ? "询价后确认" : "Confirmed with quotation";
+
+  if (minimumDays !== null && maximumDays !== null) {
+    return minimumDays === maximumDays
+      ? `${minimumDays} ${days}`
+      : `${minimumDays}–${maximumDays} ${days}`;
+  }
+
+  if (minimumDays !== null) return `${minimumDays}+ ${days}`;
+  if (maximumDays !== null) return `${maximumDays} ${days}`;
+
+  return pending;
+}
+
 export function ProductComparison({
   locale,
   products,
@@ -47,6 +67,7 @@ export function ProductComparison({
           empty:
             "从商品详情页将两个或以上商品加入对比，便于核对规格、起订量、价格和服务。",
           moq: "起订量",
+          leadTime: "生产交期",
           price: "最低阶梯单价",
           remove: "移除",
           services: "可用服务",
@@ -58,6 +79,7 @@ export function ProductComparison({
           empty:
             "Add two or more products from their detail pages to compare specifications, minimum order quantities, pricing and services.",
           moq: "Minimum order quantity",
+          leadTime: "Production lead time",
           price: "Starting tier price",
           remove: "Remove",
           services: "Available services",
@@ -98,6 +120,15 @@ export function ProductComparison({
               locale,
             )
           : "—",
+    },
+    {
+      label: copy.leadTime,
+      value: (product: CatalogueProductDetail) =>
+        formatLeadTime(
+          product.productionLeadTimeMinDays,
+          product.productionLeadTimeMaxDays,
+          locale,
+        ),
     },
     {
       label: copy.services,

@@ -21,6 +21,26 @@ function formatPrice(amount: number, currencyCode: string, locale: string) {
   }).format(amount);
 }
 
+function formatLeadTime(
+  minimumDays: number | null,
+  maximumDays: number | null,
+  locale: string,
+) {
+  const days = locale === "zh" ? "天" : "days";
+  const pending = locale === "zh" ? "询价后确认" : "Confirmed with quotation";
+
+  if (minimumDays !== null && maximumDays !== null) {
+    return minimumDays === maximumDays
+      ? `${minimumDays} ${days}`
+      : `${minimumDays}–${maximumDays} ${days}`;
+  }
+
+  if (minimumDays !== null) return `${minimumDays}+ ${days}`;
+  if (maximumDays !== null) return `${maximumDays} ${days}`;
+
+  return pending;
+}
+
 export default async function ProductDetailPage({
   params,
 }: Readonly<{ params: Promise<{ locale: string; slug: string }> }>) {
@@ -43,6 +63,7 @@ export default async function ProductDetailPage({
           description: "商品说明",
           enquiry: "加入询单列表",
           moq: "起订量",
+          leadTime: "生产交期",
           price: "数量阶梯价格",
           quantity: "数量",
           services: "可用服务",
@@ -53,6 +74,7 @@ export default async function ProductDetailPage({
           description: "Product overview",
           enquiry: "Add to enquiry list",
           moq: "Minimum order quantity",
+          leadTime: "Production lead time",
           price: "Quantity-tier pricing",
           quantity: "Quantity",
           services: "Available services",
@@ -105,6 +127,18 @@ export default async function ProductDetailPage({
               </div>
             </dl>
           ) : null}
+          <dl className="border-border border-y py-5">
+            <div className="flex items-center justify-between gap-4">
+              <dt className="text-muted-foreground">{copy.leadTime}</dt>
+              <dd className="font-semibold">
+                {formatLeadTime(
+                  product.productionLeadTimeMinDays,
+                  product.productionLeadTimeMaxDays,
+                  locale,
+                )}
+              </dd>
+            </div>
+          </dl>
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">{copy.price}</h2>
             <div className="divide-y rounded-lg border">
