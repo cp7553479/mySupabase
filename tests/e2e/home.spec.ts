@@ -149,3 +149,40 @@ test("published blog content is listed and rendered from Supabase", async ({
     page.getByText("A stronger enquiry begins with a clear product direction"),
   ).toBeVisible();
 });
+
+test("catalogue uses preview products, images and quantity-tier pricing", async ({
+  page,
+}) => {
+  await page.goto("/en/products");
+
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Find a strong starting point for your next brief.",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("img", {
+      name: "Multi Band Wireless Vintage Radio with Flashlight",
+    }),
+  ).toBeVisible();
+
+  await page
+    .locator('[data-slot="card"]')
+    .filter({ hasText: "Multi Band Wireless Vintage Radio with Flashlight" })
+    .getByRole("link", { name: "View product" })
+    .click();
+  await expect(page.getByText("Quantity-tier pricing")).toBeVisible();
+  await expect(page.getByText("50–99 Quantity")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Add to enquiry list" }),
+  ).toBeVisible();
+
+  await page.goto("/zh/products");
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "为下一次采购发现合适的商品。",
+    }),
+  ).toBeVisible();
+});
