@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AuthForm } from "@/components/account/auth-form";
 import { DeliveryAddressForm } from "@/components/account/delivery-address-form";
 import { OrganizationForm } from "@/components/account/organization-form";
+import { OrganizationMembers } from "@/components/account/organization-members";
 import { ProfileForm } from "@/components/account/profile-form";
 import { SignOutButton } from "@/components/account/sign-out-button";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,26 @@ export default async function AccountPage({
         .eq("is_default", true)
         .maybeSingle()
     : null;
+  const organizationMembers = organizationDetails?.organizations
+    ? await supabase
+        .from("organization_members")
+        .select("user_id, membership_role, status")
+        .eq("organization_id", organization?.data?.organization_id ?? "")
+        .eq("status", "active")
+        .order("membership_role")
+    : null;
+  const memberIds = (organizationMembers?.data ?? []).map(
+    (member) => member.user_id,
+  );
+  const memberProfiles = memberIds.length
+    ? await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", memberIds)
+    : null;
+  const memberProfileById = new Map(
+    (memberProfiles?.data ?? []).map((profile) => [profile.id, profile]),
+  );
 
   return (
     <section className="mx-auto max-w-md px-5 py-16 lg:py-24">
@@ -87,19 +108,37 @@ export default async function AccountPage({
             website={organizationDetails?.organizations?.website ?? ""}
           />
           {organizationDetails?.organizations ? (
-            <DeliveryAddressForm
-              address={{
-                city: deliveryAddress?.data?.city ?? "",
-                contactName: deliveryAddress?.data?.contact_name ?? "",
-                countryCode: deliveryAddress?.data?.country_code ?? "",
-                line1: deliveryAddress?.data?.line1 ?? "",
-                line2: deliveryAddress?.data?.line2 ?? "",
-                phone: deliveryAddress?.data?.phone ?? "",
-                postalCode: deliveryAddress?.data?.postal_code ?? "",
-                stateRegion: deliveryAddress?.data?.state_region ?? "",
-              }}
-              locale={locale}
-            />
+            <>
+              <DeliveryAddressForm
+                address={{
+                  city: deliveryAddress?.data?.city ?? "",
+                  contactName: deliveryAddress?.data?.contact_name ?? "",
+                  countryCode: deliveryAddress?.data?.country_code ?? "",
+                  line1: deliveryAddress?.data?.line1 ?? "",
+                  line2: deliveryAddress?.data?.line2 ?? "",
+                  phone: deliveryAddress?.data?.phone ?? "",
+                  postalCode: deliveryAddress?.data?.postal_code ?? "",
+                  stateRegion: deliveryAddress?.data?.state_region ?? "",
+                }}
+                locale={locale}
+              />
+              <OrganizationMembers
+                locale={locale}
+                members={(
+                  (organizationMembers?.data ?? []) as {
+                    membership_role: string;
+                    status: string;
+                    user_id: string;
+                  }[]
+                ).map((member) => ({
+                  email: memberProfileById.get(member.user_id)?.email ?? null,
+                  fullName:
+                    memberProfileById.get(member.user_id)?.full_name ?? null,
+                  membershipRole: member.membership_role,
+                  status: member.status,
+                }))}
+              />
+            </>
           ) : null}
           <div className="flex flex-wrap gap-3">
             <Button asChild>
