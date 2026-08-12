@@ -24,13 +24,14 @@ LogoPress 使用已链接的 Supabase 项目 `nizvigrplhvbvafwvcmy`。`SPEC.md` 
 
 - 账户与权限：`profiles`、`organizations`、`organization_members`、`roles`、`permissions`、`user_roles`；
 - 企业价格与审核：`organization_price_books`、`organization_review_events`；
-- 商品目录：`products`、`taxonomy_terms`、`product_specifications`、`media_assets`、`product_compliance_records`、`product_option_groups`、`product_option_values`、`product_variants`；
+- 商品目录：`products`、`taxonomy_terms`、`product_specifications`、`media_assets`、`product_compliance_records`、`product_option_groups`、`product_option_values`、`product_variants`、`product_favorites`；
 - 价格：`price_books`、`product_price_grids`、`product_price_tiers`、`product_upcharge_grids`、`product_upcharge_tiers`；
 - 询单与报价：`inquiries`、`inquiry_items`、`inquiry_attachments`、`inquiry_communications`、`quotes`、`quote_versions`、`quote_items`、`quote_responses`；
 - 内容：`content_entries` 及其翻译、媒体、主题分类和商品关联表；主题用于前台文章浏览，商品关联用于文章中的目录入口。
 - 站点配置：`site_settings`、`site_locales`、`navigation_menus`、`navigation_items`、`navigation_item_translations`。
 
 数量区间使用数据库约束防止同一价格网格出现重叠。询单和报价明细保留名称、选项与价格快照，避免商品后续修改影响历史记录。
+`product_favorites` 只保存登录会员与公开商品之间的收藏关系，会员仅能读取和删除自己的收藏。
 
 ## 安全边界
 

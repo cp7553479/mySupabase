@@ -80,6 +80,11 @@ export default async function AccountPage({
                 {locale === "zh" ? "查看我的询单" : "View my enquiries"}
               </Link>
             </Button>
+            <Button asChild variant="outline">
+              <Link href={`/${locale}/account/favorites`}>
+                {locale === "zh" ? "我的收藏" : "Saved products"}
+              </Link>
+            </Button>
             <SignOutButton locale={locale} />
           </div>
         </div>

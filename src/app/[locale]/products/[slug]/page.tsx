@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { FavoriteButton } from "@/components/catalogue/favorite-button";
 import { ProductConfigurator } from "@/components/catalogue/product-configurator";
 import { getPublishedCatalogueProductBySlug } from "@/lib/catalogue/queries";
 import { isLocale } from "@/lib/i18n";
@@ -130,6 +131,7 @@ export default async function ProductDetailPage({
             optionGroups={product.optionGroups}
             productId={product.id}
           />
+          <FavoriteButton locale={locale} productId={product.id} />
         </div>
       </div>
       {product.description ? (

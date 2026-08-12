@@ -270,6 +270,11 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
   await expect(
     page.getByText("Sign in before adding this product to your enquiry list."),
   ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Save product" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Save product" }).click();
+  await expect(page.getByText("Sign in to save products.")).toBeVisible();
 
   await page.goto("/zh/products");
   await expect(
@@ -393,4 +398,11 @@ test("creating a company profile requires an authenticated account", async ({
   });
 
   expect(response.status()).toBe(401);
+});
+
+test("saved products require an authenticated account", async ({ page }) => {
+  const response = await page.request.get("/api/favorites");
+  expect(response.status()).toBe(401);
+  await page.goto("/en/account/favorites");
+  await expect(page).toHaveURL(/\/en\/account$/);
 });
