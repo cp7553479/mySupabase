@@ -70,6 +70,7 @@ export function ProductComparison({
           leadTime: "生产交期",
           price: "最低阶梯单价",
           remove: "移除",
+          enquiry: "开始询单",
           services: "可用服务",
           specifications: "主要规格",
           view: "查看商品",
@@ -82,6 +83,7 @@ export function ProductComparison({
           leadTime: "Production lead time",
           price: "Starting tier price",
           remove: "Remove",
+          enquiry: "Start enquiry",
           services: "Available services",
           specifications: "Key specifications",
           view: "View product",
@@ -166,6 +168,13 @@ export function ProductComparison({
                   <Button asChild size="sm">
                     <Link href={`/${locale}/products/${product.slug}`}>
                       {copy.view}
+                    </Link>
+                  </Button>
+                  <Button asChild size="sm" variant="outline">
+                    <Link
+                      href={`/${locale}/products/${product.slug}#enquiry-configurator`}
+                    >
+                      {copy.enquiry}
                     </Link>
                   </Button>
                   <Button

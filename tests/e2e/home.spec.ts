@@ -350,12 +350,14 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
   await expect(
     page.getByRole("button", { name: "Remove from compare" }),
   ).toBeVisible();
+  await page.goto("/en/products/reinforced-handle-bag");
+  await page.getByRole("button", { name: "Add to compare" }).click();
   await page.goto("/en/products/compare");
   await expect(
-    page.getByText(
-      "Add two or more products from their detail pages to compare specifications, minimum order quantities, pricing and services.",
-    ),
+    page.getByText("Multi Band Wireless Vintage Radio with Flashlight"),
   ).toBeVisible();
+  await page.getByRole("link", { name: "Start enquiry" }).first().click();
+  await expect(page).toHaveURL(/#enquiry-configurator$/);
 
   await page.goto("/zh/products");
   await expect(
