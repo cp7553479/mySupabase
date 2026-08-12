@@ -8,7 +8,7 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: { default: "LogoPress", template: "%s | LogoPress" },
-  description: "LogoPress B2B custom product catalogue.",
+  description: "LogoPress B2B custom product catalogue and enquiry platform.",
 };
 
 export default function RootLayout({
