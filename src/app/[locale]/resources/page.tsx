@@ -25,12 +25,14 @@ export default async function ResourcesPage({
           faq: "常见问题",
           resources: "资料中心",
           cta: "浏览商品目录",
+          details: "查看详情",
         }
       : {
           cases: "Case studies",
           faq: "Frequently asked questions",
           resources: "Resources",
           cta: "Browse catalogue",
+          details: "View details",
         };
   const sections = [
     { entries: cases, title: copy.cases },
@@ -62,6 +64,13 @@ export default async function ResourcesPage({
                   <p className="text-muted-foreground leading-7">
                     {entry.excerpt}
                   </p>
+                  {title !== copy.faq ? (
+                    <Button asChild className="mt-5" variant="outline">
+                      <Link href={`/${locale}/resources/${entry.slug}`}>
+                        {copy.details}
+                      </Link>
+                    </Button>
+                  ) : null}
                 </CardContent>
               </Card>
             ))}

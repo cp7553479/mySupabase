@@ -178,10 +178,16 @@ export const getPublishedArticles = cache(async (locale: string) =>
   getPublishedContent("blog", locale),
 );
 
+export const getPublishedContentBySlug = cache(
+  async (contentType: PublicContentType, locale: string, slug: string) => {
+    const entries = await getPublishedContent(contentType, locale);
+    return entries.find((entry) => entry.slug === slug) ?? null;
+  },
+);
+
 export const getPublishedArticleBySlug = cache(
   async (locale: string, slug: string) => {
-    const articles = await getPublishedArticles(locale);
-    return articles.find((article) => article.slug === slug) ?? null;
+    return getPublishedContentBySlug("blog", locale, slug);
   },
 );
 

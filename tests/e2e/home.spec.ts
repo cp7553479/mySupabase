@@ -199,6 +199,10 @@ test("published cases, FAQ and resources are available from Supabase", async ({
   await expect(
     page.getByText("Custom product enquiry checklist"),
   ).toBeVisible();
+  await page.getByRole("link", { name: "View details" }).first().click();
+  await expect(
+    page.getByRole("heading", { name: "Event-ready brand kits" }),
+  ).toBeVisible();
 });
 
 test("catalogue uses preview products, images and quantity-tier pricing", async ({
