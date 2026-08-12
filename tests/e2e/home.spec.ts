@@ -311,3 +311,12 @@ test("submitting an enquiry requires an authenticated account", async ({
 
   expect(response.status()).toBe(401);
 });
+
+test("updating a profile requires an authenticated account", async ({
+  page,
+}) => {
+  const response = await page.request.put("/api/account/profile", {
+    data: { fullName: "Buyer" },
+  });
+  expect(response.status()).toBe(401);
+});
