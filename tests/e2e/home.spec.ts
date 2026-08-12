@@ -35,6 +35,17 @@ test("root selects the default locale and the Chinese route renders its entry po
   ).toBeVisible();
 });
 
+test("language selection is remembered for the root entry point", async ({
+  page,
+}) => {
+  await page.goto("/en");
+  await page.getByRole("link", { name: "中文" }).first().click();
+  await expect(page).toHaveURL(/\/zh$/);
+
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/zh$/);
+});
+
 test("mobile navigation exposes the catalogue and enquiry paths", async ({
   page,
 }) => {
