@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { FaqBrowser } from "@/components/content/faq-browser";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPublishedContent } from "@/lib/content/queries";
@@ -36,7 +37,6 @@ export default async function ResourcesPage({
         };
   const sections = [
     { entries: cases, title: copy.cases },
-    { entries: faqs, title: copy.faq },
     { entries: resources, title: copy.resources },
   ];
   return (
@@ -64,19 +64,21 @@ export default async function ResourcesPage({
                   <p className="text-muted-foreground leading-7">
                     {entry.excerpt}
                   </p>
-                  {title !== copy.faq ? (
-                    <Button asChild className="mt-5" variant="outline">
-                      <Link href={`/${locale}/resources/${entry.slug}`}>
-                        {copy.details}
-                      </Link>
-                    </Button>
-                  ) : null}
+                  <Button asChild className="mt-5" variant="outline">
+                    <Link href={`/${locale}/resources/${entry.slug}`}>
+                      {copy.details}
+                    </Link>
+                  </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         </section>
       ))}
+      <section className="space-y-5">
+        <h2 className="text-2xl font-semibold">{copy.faq}</h2>
+        <FaqBrowser entries={faqs} locale={locale} />
+      </section>
       <Button asChild>
         <Link href={`/${locale}/products`}>{copy.cta}</Link>
       </Button>

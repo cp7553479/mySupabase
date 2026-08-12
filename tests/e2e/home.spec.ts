@@ -203,6 +203,14 @@ test("published cases, FAQ and resources are available from Supabase", async ({
   await expect(
     page.getByRole("heading", { name: "Event-ready brand kits" }),
   ).toBeVisible();
+
+  await page.goto("/en/resources");
+  await page.getByText("How does quantity pricing work?").click();
+  await expect(
+    page.getByText(
+      "Select a quantity on the product page to see the applicable tier.",
+    ),
+  ).toBeVisible();
 });
 
 test("catalogue uses preview products, images and quantity-tier pricing", async ({
