@@ -1,7 +1,7 @@
 import { cache } from "react";
 
 import { getPublishedCatalogueProducts } from "@/lib/catalogue/queries";
-import { createPublicSupabaseClient } from "@/lib/supabase/client";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type PublishedArticle = {
   body: string;
@@ -78,7 +78,7 @@ function toArticle(
 
 export const getPublishedContent = cache(
   async (contentType: PublicContentType, locale: string) => {
-    const supabase = createPublicSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     const { data: entries, error: entriesError } = await supabase
       .from("content_entries")
       .select(
@@ -196,7 +196,7 @@ export const getPublishedContentProducts = cache(
     contentEntryId: string,
     locale: string,
   ): Promise<PublishedCatalogueProduct[]> => {
-    const supabase = createPublicSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
       .from("content_products")
       .select("product_id, sort_order")

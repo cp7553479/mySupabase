@@ -194,6 +194,9 @@ test("published cases, FAQ and resources are available from Supabase", async ({
 }) => {
   await page.goto("/en/resources");
 
+  await expect(
+    page.getByRole("link", { name: "Sign in for member resources" }),
+  ).toHaveAttribute("href", "/en/account");
   await expect(page.getByText("Event-ready brand kits")).toBeVisible();
   await expect(page.getByText("How does quantity pricing work?")).toBeVisible();
   await expect(

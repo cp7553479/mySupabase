@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPublishedContent } from "@/lib/content/queries";
 import { isLocale } from "@/lib/i18n";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,9 @@ export default async function ResourcesPage({
 }: Readonly<{ params: Promise<{ locale: string }> }>) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
+  const supabase = await createServerSupabaseClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const isSignedIn = typeof claimsData?.claims.sub === "string";
   const [cases, faqs, resources] = await Promise.all([
     getPublishedContent("case_study", locale),
     getPublishedContent("faq", locale),
@@ -27,6 +31,8 @@ export default async function ResourcesPage({
           resources: "资料中心",
           cta: "浏览商品目录",
           details: "查看详情",
+          memberContent: "登录后可访问仅向会员开放的资料、案例与采购支持内容。",
+          signIn: "登录查看会员资料",
         }
       : {
           cases: "Case studies",
@@ -34,6 +40,9 @@ export default async function ResourcesPage({
           resources: "Resources",
           cta: "Browse catalogue",
           details: "View details",
+          memberContent:
+            "Sign in to access member-only resources, cases and procurement support content.",
+          signIn: "Sign in for member resources",
         };
   const sections = [
     { entries: cases, title: copy.cases },
@@ -51,6 +60,16 @@ export default async function ResourcesPage({
             : "Content for clearer purchasing decisions."}
         </h1>
       </header>
+      {!isSignedIn ? (
+        <aside className="bg-muted/40 flex flex-wrap items-center justify-between gap-4 rounded-xl border p-5">
+          <p className="text-muted-foreground max-w-2xl text-sm leading-6">
+            {copy.memberContent}
+          </p>
+          <Button asChild variant="outline">
+            <Link href={`/${locale}/account`}>{copy.signIn}</Link>
+          </Button>
+        </aside>
+      ) : null}
       {sections.map(({ entries, title }) => (
         <section className="space-y-5" key={title}>
           <h2 className="text-2xl font-semibold">{title}</h2>
