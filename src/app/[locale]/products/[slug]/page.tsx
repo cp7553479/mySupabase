@@ -213,10 +213,12 @@ export default async function ProductDetailPage({
             </div>
           </div>
           <ProductConfigurator
+            currencyCode={product.currencyCode}
             locale={locale}
             minimumOrderQuantity={product.minimumOrderQuantity}
             optionGroups={product.optionGroups}
             productId={product.id}
+            priceTiers={product.priceTiers}
             services={product.services}
           />
           <FavoriteButton locale={locale} productId={product.id} />

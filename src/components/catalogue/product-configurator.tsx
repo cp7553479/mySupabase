@@ -5,22 +5,27 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type {
   CatalogueOptionGroup,
+  CataloguePriceTier,
   CatalogueService,
 } from "@/lib/catalogue/queries";
 
 type ProductConfiguratorProps = {
+  currencyCode: string;
   locale: string;
   minimumOrderQuantity: number | null;
   optionGroups: CatalogueOptionGroup[];
   productId: string;
+  priceTiers: CataloguePriceTier[];
   services: CatalogueService[];
 };
 
 export function ProductConfigurator({
+  currencyCode,
   locale,
   minimumOrderQuantity,
   optionGroups,
   productId,
+  priceTiers,
   services,
 }: Readonly<ProductConfiguratorProps>) {
   const [quantity, setQuantity] = useState(minimumOrderQuantity ?? 1);
@@ -32,10 +37,17 @@ export function ProductConfigurator({
   const [selections, setSelections] = useState<Record<string, string[]>>({});
   const [serviceCodes, setServiceCodes] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+  const activeTier = priceTiers.find(
+    (tier) =>
+      quantity >= tier.minimumQuantity &&
+      (tier.maximumQuantity === null || quantity <= tier.maximumQuantity),
+  );
   const copy =
     locale === "zh"
       ? {
           add: "加入询单列表",
+          applicablePrice: "当前阶梯单价",
+          estimatedTotal: "当前预估商品金额",
           note: "定制说明",
           quantity: "采购数量",
           requiredDate: "期望交期",
@@ -48,6 +60,8 @@ export function ProductConfigurator({
         }
       : {
           add: "Add to enquiry list",
+          applicablePrice: "Applicable tier price",
+          estimatedTotal: "Current estimated item total",
           note: "Customisation notes",
           quantity: "Quantity",
           requiredDate: "Requested delivery date",
@@ -170,6 +184,32 @@ export function ProductConfigurator({
           value={quantity}
         />
       </label>
+      {activeTier ? (
+        <div className="bg-muted/30 grid gap-3 rounded-lg border p-4 text-sm sm:grid-cols-2">
+          <div>
+            <p className="text-muted-foreground">{copy.applicablePrice}</p>
+            <p className="mt-1 font-semibold">
+              {new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", {
+                currency: currencyCode,
+                maximumFractionDigits: 2,
+                minimumFractionDigits: 2,
+                style: "currency",
+              }).format(activeTier.unitPrice)}
+            </p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">{copy.estimatedTotal}</p>
+            <p className="mt-1 font-semibold">
+              {new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", {
+                currency: currencyCode,
+                maximumFractionDigits: 2,
+                minimumFractionDigits: 2,
+                style: "currency",
+              }).format(activeTier.unitPrice * quantity)}
+            </p>
+          </div>
+        </div>
+      ) : null}
       <label className="block space-y-2">
         <span className="text-sm font-medium">{copy.requiredDate}</span>
         <input
