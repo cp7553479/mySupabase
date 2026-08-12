@@ -9,12 +9,14 @@ type ProductConfiguratorProps = {
   locale: string;
   minimumOrderQuantity: number | null;
   optionGroups: CatalogueOptionGroup[];
+  productId: string;
 };
 
 export function ProductConfigurator({
   locale,
   minimumOrderQuantity,
   optionGroups,
+  productId,
 }: Readonly<ProductConfiguratorProps>) {
   const [quantity, setQuantity] = useState(minimumOrderQuantity ?? 1);
   const [selections, setSelections] = useState<Record<string, string>>({});
@@ -26,6 +28,8 @@ export function ProductConfigurator({
           quantity: "采购数量",
           required: "请完成必填配置后加入询单列表。",
           minimum: "数量未达到起订量。",
+          signIn: "请先登录，再将商品加入询单列表。",
+          success: "商品已加入草稿询单。",
         }
       : {
           add: "Add to enquiry list",
@@ -33,9 +37,11 @@ export function ProductConfigurator({
           required:
             "Complete the required configuration before adding this item.",
           minimum: "The quantity is below the minimum order quantity.",
+          signIn: "Sign in before adding this product to your enquiry list.",
+          success: "Product added to your draft enquiry.",
         };
 
-  function validate() {
+  async function addToEnquiry() {
     if (minimumOrderQuantity && quantity < minimumOrderQuantity) {
       setMessage(copy.minimum);
       return;
@@ -50,7 +56,33 @@ export function ProductConfigurator({
       return;
     }
 
-    setMessage(null);
+    const response = await fetch("/api/inquiry-items", {
+      body: JSON.stringify({
+        productId,
+        quantity,
+        selections: Object.entries(selections).map(
+          ([optionGroupId, optionValueId]) => ({
+            optionGroupId,
+            optionValueId,
+          }),
+        ),
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    });
+    const body = (await response.json()) as { error?: string };
+
+    if (response.status === 401) {
+      setMessage(copy.signIn);
+      return;
+    }
+
+    if (!response.ok) {
+      setMessage(body.error ?? copy.required);
+      return;
+    }
+
+    setMessage(copy.success);
   }
 
   return (
@@ -99,7 +131,7 @@ export function ProductConfigurator({
         </fieldset>
       ))}
       {message ? <p className="text-destructive text-sm">{message}</p> : null}
-      <Button className="w-full sm:w-auto" onClick={validate} type="button">
+      <Button className="w-full sm:w-auto" onClick={addToEnquiry} type="button">
         {copy.add}
       </Button>
     </div>

@@ -6,6 +6,7 @@ import { createPublicSupabaseClient } from "@/lib/supabase/client";
 export type CatalogueProduct = {
   categories: string[];
   currencyCode: string;
+  id: string;
   minimumOrderQuantity: number | null;
   name: string;
   primaryImage: CatalogueMedia | null;
@@ -463,6 +464,7 @@ function toCatalogueProducts(
     return {
       categories,
       currencyCode: product.default_currency_code,
+      id: product.id,
       minimumOrderQuantity: product.minimum_order_quantity,
       name: translation.name,
       primaryImage: toMedia(product.id, mediaById, rows.media),
@@ -485,6 +487,7 @@ export const getPublishedCatalogueProducts = cache(async (locale: string) => {
   return toCatalogueProducts(rows).map((product) => ({
     categories: product.categories,
     currencyCode: product.currencyCode,
+    id: product.id,
     minimumOrderQuantity: product.minimumOrderQuantity,
     name: product.name,
     primaryImage: product.primaryImage,

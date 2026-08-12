@@ -128,6 +128,7 @@ export default async function ProductDetailPage({
             locale={locale}
             minimumOrderQuantity={product.minimumOrderQuantity}
             optionGroups={product.optionGroups}
+            productId={product.id}
           />
         </div>
       </div>

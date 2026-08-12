@@ -203,10 +203,8 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
   await page.getByRole("button", { name: "Full Color" }).click();
   await page.getByRole("button", { name: "Add to enquiry list" }).click();
   await expect(
-    page.getByText(
-      "Complete the required configuration before adding this item.",
-    ),
-  ).not.toBeVisible();
+    page.getByText("Sign in before adding this product to your enquiry list."),
+  ).toBeVisible();
 
   await page.goto("/zh/products");
   await expect(
@@ -251,4 +249,19 @@ test("anonymous visitors are sent to account sign-in before viewing enquiries", 
 
   await expect(page).toHaveURL(/\/en\/account$/);
   await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+});
+
+test("the enquiry API requires an authenticated account", async ({ page }) => {
+  const response = await page.request.post("/api/inquiry-items", {
+    data: {
+      productId: "00000000-0000-0000-0000-000000000000",
+      quantity: 50,
+      selections: [],
+    },
+  });
+
+  expect(response.status()).toBe(401);
+  await expect(response.json()).resolves.toEqual({
+    error: "Authentication required.",
+  });
 });
