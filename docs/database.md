@@ -52,6 +52,10 @@ LogoPress 使用已链接的 Supabase 项目 `nizvigrplhvbvafwvcmy`。`SPEC.md` 
 
 应用先上传私有文件，再写入 `inquiry_attachments` 元数据。更新同一路径时，Storage 同时需要 `INSERT`、`SELECT` 和 `UPDATE` 权限。
 
+## 开发预览商品
+
+开发环境保留少量来自当前商品库的已发布商品、主图和公开美元阶梯价，用于目录、详情和询单流程的真实预览测试。该数据通过迁移写入，商品编号保留来源标识；完整商品库导入由后续独立流程管理。
+
 ## 迁移流程
 
 项目采用 `supabase/migrations/` 的 imperative migrations：
