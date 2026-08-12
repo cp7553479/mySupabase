@@ -1,6 +1,9 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AuthForm } from "@/components/account/auth-form";
+import { SignOutButton } from "@/components/account/sign-out-button";
+import { Button } from "@/components/ui/button";
 import { isLocale } from "@/lib/i18n";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -24,10 +27,20 @@ export default async function AccountPage({
     <section className="mx-auto max-w-md px-5 py-16 lg:py-24">
       <h1 className="text-4xl font-semibold tracking-[-0.04em]">{title}</h1>
       {typeof email === "string" ? (
-        <p className="text-muted-foreground mt-6 leading-7">
-          {locale === "zh" ? "当前已登录：" : "Signed in as: "}
-          {email}
-        </p>
+        <div className="mt-6 space-y-6">
+          <p className="text-muted-foreground leading-7">
+            {locale === "zh" ? "当前已登录：" : "Signed in as: "}
+            {email}
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild>
+              <Link href={`/${locale}/account/enquiries`}>
+                {locale === "zh" ? "查看我的询单" : "View my enquiries"}
+              </Link>
+            </Button>
+            <SignOutButton locale={locale} />
+          </div>
+        </div>
       ) : (
         <div className="mt-8 rounded-xl border p-6">
           <AuthForm locale={locale} />

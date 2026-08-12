@@ -243,3 +243,12 @@ test("account confirmation returns to the selected locale", async ({
     page.getByRole("heading", { level: 1, name: "账户与询单" }),
   ).toBeVisible();
 });
+
+test("anonymous visitors are sent to account sign-in before viewing enquiries", async ({
+  page,
+}) => {
+  await page.goto("/en/account/enquiries");
+
+  await expect(page).toHaveURL(/\/en\/account$/);
+  await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+});
