@@ -32,6 +32,7 @@ export type CataloguePriceTier = {
 
 export type CatalogueProductDetail = CatalogueProduct & {
   description: string | null;
+  gallery: CatalogueMedia[];
   optionGroups: CatalogueOptionGroup[];
   priceTiers: CataloguePriceTier[];
   services: string[];
@@ -177,6 +178,20 @@ function applyTranslation(
   };
 }
 
+function toMediaAsset(asset: MediaAssetRow | undefined) {
+  if (!asset) {
+    return null;
+  }
+
+  const url =
+    asset.external_url ??
+    (asset.bucket_id && asset.object_path
+      ? `${getSupabasePublicEnvironment().url}/storage/v1/object/public/${asset.bucket_id}/${asset.object_path}`
+      : null);
+
+  return url ? { altText: asset.alt_text, url } : null;
+}
+
 function toMedia(
   productId: string,
   mediaById: Map<string, MediaAssetRow>,
@@ -198,17 +213,33 @@ function toMedia(
 
   const asset = mediaById.get(primary.media_asset_id);
 
-  if (!asset) {
-    return null;
-  }
+  return toMediaAsset(asset);
+}
 
-  const url =
-    asset.external_url ??
-    (asset.bucket_id && asset.object_path
-      ? `${getSupabasePublicEnvironment().url}/storage/v1/object/public/${asset.bucket_id}/${asset.object_path}`
-      : null);
+function toGallery(
+  productId: string,
+  mediaById: Map<string, MediaAssetRow>,
+  productMedia: ProductMediaRow[],
+) {
+  const seenUrls = new Set<string>();
 
-  return url ? { altText: asset.alt_text, url } : null;
+  return productMedia
+    .filter(
+      (media) =>
+        media.product_id === productId &&
+        (media.usage_type === "primary" || media.usage_type === "gallery"),
+    )
+    .sort((left, right) => left.sort_order - right.sort_order)
+    .map((media) => toMediaAsset(mediaById.get(media.media_asset_id)))
+    .filter((media): media is CatalogueMedia => media !== null)
+    .filter((media) => {
+      if (seenUrls.has(media.url)) {
+        return false;
+      }
+
+      seenUrls.add(media.url);
+      return true;
+    });
 }
 
 function toTiers(
@@ -495,6 +526,7 @@ function toCatalogueProducts(
       currencyCode: product.default_currency_code,
       id: product.id,
       filterAttributes,
+      gallery: toGallery(product.id, mediaById, rows.media),
       minimumOrderQuantity: product.minimum_order_quantity,
       name: translation.name,
       primaryImage: toMedia(product.id, mediaById, rows.media),

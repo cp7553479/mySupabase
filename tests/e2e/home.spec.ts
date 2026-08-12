@@ -270,13 +270,17 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
     .getByRole("link", { name: "View product" })
     .click();
   await expect(page.getByText("Quantity-tier pricing")).toBeVisible();
+  await expect(
+    page.locator('section[aria-label="Product images"] img'),
+  ).toHaveCount(4);
   await expect(page.getByText("Production lead time")).toBeVisible();
-  await expect(page.getByText("Confirmed with quotation")).toBeVisible();
+  await expect(page.getByText("8 days")).toBeVisible();
   await expect(page.getByText("50–99 Quantity")).toBeVisible();
   await expect(page.getByText("Radios")).toBeVisible();
   await expect(page.getByText("Specifications")).toBeVisible();
   await expect(page.getByText("Length")).toBeVisible();
   await expect(page.getByText("Available services")).toBeVisible();
+  await expect(page.getByText("Rush Production")).toBeVisible();
   await page.getByRole("button", { name: "Add to enquiry list" }).click();
   await expect(
     page.getByText(
