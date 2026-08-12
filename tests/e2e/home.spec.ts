@@ -232,3 +232,14 @@ test("account entry provides sign-in and registration controls", async ({
     page.getByRole("button", { name: "Create account" }),
   ).toBeVisible();
 });
+
+test("account confirmation returns to the selected locale", async ({
+  page,
+}) => {
+  await page.goto("/auth/confirm?locale=zh");
+
+  await expect(page).toHaveURL(/\/zh\/account$/);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "账户与询单" }),
+  ).toBeVisible();
+});

@@ -45,7 +45,7 @@ export function AuthForm({ locale }: Readonly<AuthFormProps>) {
             email,
             password,
             options: {
-              emailRedirectTo: `${window.location.origin}/${locale}/account`,
+              emailRedirectTo: `${window.location.origin}/auth/confirm?locale=${locale}`,
             },
           });
 

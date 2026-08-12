@@ -30,3 +30,9 @@
 ## 数据库迁移
 
 Supabase CLI 是唯一远端迁移部署入口。当前任务没有生成 Drizzle 迁移；未来若使用 Drizzle 生成 SQL，必须经审查纳入 `supabase/migrations/` 并由 Supabase CLI 部署，不能维护第二套迁移历史。
+
+## Supabase 认证
+
+- 本地认证使用 `.env.local` 中的公开 Supabase URL 与 Publishable Key。
+- 部署时，在 Supabase Auth 中配置正式站点地址，并允许 `/auth/confirm` 作为邮件确认回调地址。
+- 邮件确认模板使用 `/auth/confirm?token_hash={{ .TokenHash }}&type=email`，由应用完成会话交换后返回账户页。
