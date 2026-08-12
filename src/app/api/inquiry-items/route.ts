@@ -50,6 +50,8 @@ type EnteredValue = { enteredValue: string; optionGroupId: string };
 
 type InquiryRow = { id: string; inquiry_number: string };
 
+type CreatedInquiryItem = { id: string };
+
 type ProductServiceRow = { service_code: string };
 
 type ServiceRow = { code: string; name: string };
@@ -362,11 +364,13 @@ export async function POST(request: Request) {
     );
   }
 
+  const item = itemData as CreatedInquiryItem;
+
   if (groups.length > 0) {
     const groupNames = new Map(groups.map((group) => [group.id, group.name]));
     const optionRows = [
       ...values.map((value, index) => ({
-        inquiry_item_id: itemData.id,
+        inquiry_item_id: item.id,
         option_group_id: value.option_group_id,
         option_group_name_snapshot: groupNames.get(value.option_group_id) ?? "",
         option_value_id: value.id,
@@ -375,7 +379,7 @@ export async function POST(request: Request) {
       })),
       ...enteredValues.map((value, index) => ({
         entered_value: value.enteredValue,
-        inquiry_item_id: itemData.id,
+        inquiry_item_id: item.id,
         option_group_id: value.optionGroupId,
         option_group_name_snapshot: groupNames.get(value.optionGroupId) ?? "",
         sort_order: values.length + index,
@@ -386,7 +390,7 @@ export async function POST(request: Request) {
       .insert(optionRows);
 
     if (optionError) {
-      await supabase.from("inquiry_items").delete().eq("id", itemData.id);
+      await supabase.from("inquiry_items").delete().eq("id", item.id);
       return NextResponse.json(
         { error: "Could not save the product configuration." },
         { status: 500 },
@@ -430,7 +434,7 @@ export async function POST(request: Request) {
           !availableServiceCodes.has(code) || !serviceNamesByCode.has(code),
       )
     ) {
-      await supabase.from("inquiry_items").delete().eq("id", itemData.id);
+      await supabase.from("inquiry_items").delete().eq("id", item.id);
       return NextResponse.json(
         { error: "One or more requested services are unavailable." },
         { status: 409 },
@@ -441,7 +445,7 @@ export async function POST(request: Request) {
       .from("inquiry_item_service_requests")
       .insert(
         serviceCodes.map((serviceCode) => ({
-          inquiry_item_id: itemData.id,
+          inquiry_item_id: item.id,
           service_code: serviceCode,
           service_name_snapshot:
             serviceNamesByCode.get(serviceCode) ?? serviceCode,
@@ -449,7 +453,7 @@ export async function POST(request: Request) {
       );
 
     if (serviceRequestError) {
-      await supabase.from("inquiry_items").delete().eq("id", itemData.id);
+      await supabase.from("inquiry_items").delete().eq("id", item.id);
       return NextResponse.json(
         { error: "Could not save the requested services." },
         { status: 500 },
@@ -458,7 +462,11 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json(
-    { inquiryNumber: inquiry.inquiry_number },
+    {
+      inquiryId: inquiry.id,
+      inquiryItemId: item.id,
+      inquiryNumber: inquiry.inquiry_number,
+    },
     { status: 201 },
   );
 }

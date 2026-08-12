@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { InquiryAttachmentUpload } from "@/components/inquiries/inquiry-attachment-upload";
 import type {
   CatalogueOptionGroup,
   CataloguePriceTier,
@@ -37,6 +38,10 @@ export function ProductConfigurator({
   const [selections, setSelections] = useState<Record<string, string[]>>({});
   const [serviceCodes, setServiceCodes] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+  const [createdItem, setCreatedItem] = useState<{
+    inquiryId: string;
+    inquiryItemId: string;
+  } | null>(null);
   const activeTier = priceTiers.find(
     (tier) =>
       quantity >= tier.minimumQuantity &&
@@ -55,8 +60,11 @@ export function ProductConfigurator({
           minimum: "数量未达到起订量。",
           maximum: "该配置已达到可选数量上限。",
           services: "附加服务",
+          artwork: "图稿或 Logo 文件",
+          artworkHint: "加入询单列表后上传所需文件。",
+          artworkReady: "请上传所需图稿或 Logo 文件。",
           signIn: "请先登录，再将商品加入询单列表。",
-          success: "商品已加入草稿询单。",
+          success: "商品已加入草稿询单，请继续上传所需文件。",
         }
       : {
           add: "Add to enquiry list",
@@ -70,8 +78,13 @@ export function ProductConfigurator({
           minimum: "The quantity is below the minimum order quantity.",
           maximum: "This configuration has reached its selection limit.",
           services: "Additional services",
+          artwork: "Artwork or logo file",
+          artworkHint:
+            "Upload the required file after adding this item to the enquiry list.",
+          artworkReady: "Upload the required artwork or logo file.",
           signIn: "Sign in before adding this product to your enquiry list.",
-          success: "Product added to your draft enquiry.",
+          success:
+            "Product added to your draft enquiry. Upload the required file to continue.",
         };
 
   async function addToEnquiry() {
@@ -89,7 +102,10 @@ export function ProductConfigurator({
         group.minimumSelections,
         group.isRequired ? 1 : 0,
       );
-      return (selections[group.id]?.length ?? 0) < minimumSelections;
+      return (
+        group.inputType !== "file" &&
+        (selections[group.id]?.length ?? 0) < minimumSelections
+      );
     });
 
     if (missingRequired) {
@@ -121,7 +137,11 @@ export function ProductConfigurator({
       headers: { "Content-Type": "application/json" },
       method: "POST",
     });
-    const body = (await response.json()) as { error?: string };
+    const body = (await response.json()) as {
+      error?: string;
+      inquiryId?: string;
+      inquiryItemId?: string;
+    };
 
     if (response.status === 401) {
       setMessage(copy.signIn);
@@ -133,6 +153,12 @@ export function ProductConfigurator({
       return;
     }
 
+    if (body.inquiryId && body.inquiryItemId) {
+      setCreatedItem({
+        inquiryId: body.inquiryId,
+        inquiryItemId: body.inquiryItemId,
+      });
+    }
     setMessage(copy.success);
   }
 
@@ -233,7 +259,24 @@ export function ProductConfigurator({
           {group.description ? (
             <p className="text-muted-foreground text-sm">{group.description}</p>
           ) : null}
-          {group.inputType === "text" || group.inputType === "number" ? (
+          {group.inputType === "file" ? (
+            createdItem ? (
+              <div className="space-y-2 rounded-lg border border-dashed p-3">
+                <p className="text-muted-foreground text-sm">
+                  {copy.artworkReady}
+                </p>
+                <InquiryAttachmentUpload
+                  inquiryId={createdItem.inquiryId}
+                  inquiryItemId={createdItem.inquiryItemId}
+                  locale={locale}
+                />
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                {copy.artworkHint}
+              </p>
+            )
+          ) : group.inputType === "text" || group.inputType === "number" ? (
             <input
               className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
               inputMode={group.inputType === "number" ? "decimal" : undefined}

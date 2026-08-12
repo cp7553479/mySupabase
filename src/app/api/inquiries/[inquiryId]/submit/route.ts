@@ -15,6 +15,12 @@ type SubmitInquiryRequest = {
   requiredDate?: unknown;
 };
 
+type InquiryItemReference = { id: string; product_id: string };
+
+type RequiredFileOptionGroup = { product_id: string };
+
+type ItemAttachmentReference = { inquiry_item_id: string | null };
+
 function text(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
@@ -66,15 +72,58 @@ export async function POST(
     );
   }
 
-  const { data: items, error: itemsError } = await supabase
+  const { data: itemsData, error: itemsError } = await supabase
     .from("inquiry_items")
-    .select("id")
+    .select("id, product_id")
     .eq("inquiry_id", inquiryId)
-    .limit(1);
+    .order("created_at");
+  const items = (itemsData ?? []) as InquiryItemReference[];
 
-  if (itemsError || !items || items.length === 0) {
+  if (itemsError || items.length === 0) {
     return NextResponse.json(
       { error: "Add at least one product before submitting." },
+      { status: 409 },
+    );
+  }
+
+  const [
+    { data: requiredFileGroupsData, error: requiredFileGroupsError },
+    { data: attachmentsData, error: attachmentsError },
+  ] = await Promise.all([
+    supabase
+      .from("product_option_groups")
+      .select("product_id")
+      .in("product_id", [...new Set(items.map((item) => item.product_id))])
+      .eq("input_type", "file")
+      .eq("is_required", true)
+      .eq("is_active", true),
+    supabase
+      .from("inquiry_attachments")
+      .select("inquiry_item_id")
+      .eq("inquiry_id", inquiryId),
+  ]);
+  const requiredFileProductIds = new Set(
+    ((requiredFileGroupsData ?? []) as RequiredFileOptionGroup[]).map(
+      (group) => group.product_id,
+    ),
+  );
+  const attachedItemIds = new Set(
+    ((attachmentsData ?? []) as ItemAttachmentReference[])
+      .map((attachment) => attachment.inquiry_item_id)
+      .filter((itemId): itemId is string => itemId !== null),
+  );
+
+  if (
+    requiredFileGroupsError ||
+    attachmentsError ||
+    items.some(
+      (item) =>
+        requiredFileProductIds.has(item.product_id) &&
+        !attachedItemIds.has(item.id),
+    )
+  ) {
+    return NextResponse.json(
+      { error: "Upload the required item files before submitting." },
       { status: 409 },
     );
   }

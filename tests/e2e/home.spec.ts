@@ -29,6 +29,26 @@ test("English homepage presents the public catalogue entry points", async ({
   ).toBeVisible();
 });
 
+test("a custom product explains its required artwork step before an enquiry is created", async ({
+  page,
+}) => {
+  await page.goto("/en/products/multi-band-wireless-vintage-radio");
+
+  await expect(page.getByText(/^Artwork file/)).toBeVisible();
+  await expect(
+    page.getByText(
+      "Upload the required file after adding this item to the enquiry list.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Full Color" }).click();
+  await page.getByRole("button", { name: "Add to enquiry list" }).click();
+  await expect(
+    page.getByText("Sign in before adding this product to your enquiry list."),
+  ).toBeVisible();
+});
+
 test("cookie consent records the visitor choice", async ({ page }) => {
   await page.goto("/en");
   const consent = page.getByRole("complementary", { name: "Cookie consent" });
