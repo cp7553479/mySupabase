@@ -1,5 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
+import { DraftInquiryList } from "@/components/inquiries/draft-inquiry-list";
+import { getCurrentDraftInquiry } from "@/lib/inquiries/queries";
 import { isLocale } from "@/lib/i18n";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -21,6 +23,8 @@ export default async function AccountEnquiriesPage({
     redirect(`/${locale}/account`);
   }
 
+  const inquiry = await getCurrentDraftInquiry();
+
   return (
     <section className="mx-auto max-w-4xl px-5 py-16 lg:py-24">
       <h1 className="text-4xl font-semibold tracking-[-0.04em]">
@@ -31,6 +35,7 @@ export default async function AccountEnquiriesPage({
           ? "这里将集中展示已提交询单、报价和后续沟通进展。"
           : "Submitted enquiries, quotations and follow-up progress will appear here."}
       </p>
+      <DraftInquiryList inquiry={inquiry} locale={locale} />
     </section>
   );
 }

@@ -275,3 +275,16 @@ test("the enquiry API requires an authenticated account", async ({ page }) => {
     error: "Authentication required.",
   });
 });
+
+test("draft enquiry items cannot be removed without an authenticated account", async ({
+  page,
+}) => {
+  const response = await page.request.delete(
+    "/api/inquiry-items/00000000-0000-0000-0000-000000000000",
+  );
+
+  expect(response.status()).toBe(401);
+  await expect(response.json()).resolves.toEqual({
+    error: "Authentication required.",
+  });
+});
