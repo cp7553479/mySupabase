@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { FavoriteButton } from "@/components/catalogue/favorite-button";
 import { CompareButton } from "@/components/catalogue/compare-button";
 import { ProductConfigurator } from "@/components/catalogue/product-configurator";
-import { getPublishedCatalogueProductBySlug } from "@/lib/catalogue/queries";
+import {
+  getPublishedCatalogueProductBySlug,
+  getPublishedCatalogueProductDetails,
+} from "@/lib/catalogue/queries";
 import { isLocale } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +53,10 @@ export default async function ProductDetailPage({
     notFound();
   }
 
-  const product = await getPublishedCatalogueProductBySlug(locale, slug);
+  const [product, catalogue] = await Promise.all([
+    getPublishedCatalogueProductBySlug(locale, slug),
+    getPublishedCatalogueProductDetails(locale),
+  ]);
 
   if (!product) {
     notFound();
@@ -67,6 +73,7 @@ export default async function ProductDetailPage({
           leadTime: "生产交期",
           price: "数量阶梯价格",
           quantity: "数量",
+          related: "相关商品",
           services: "可用服务",
           specifications: "商品规格",
         }
@@ -79,6 +86,7 @@ export default async function ProductDetailPage({
           leadTime: "Production lead time",
           price: "Quantity-tier pricing",
           quantity: "Quantity",
+          related: "Related products",
           services: "Available services",
           specifications: "Specifications",
         };
@@ -233,6 +241,52 @@ export default async function ProductDetailPage({
                 {service.name}
               </Badge>
             ))}
+          </div>
+        </section>
+      ) : null}
+      {catalogue.filter(
+        (candidate) =>
+          candidate.id !== product.id &&
+          candidate.categories.some((category) =>
+            product.categories.includes(category),
+          ),
+      ).length > 0 ? (
+        <section className="mt-16 space-y-5">
+          <h2 className="text-2xl font-semibold">{copy.related}</h2>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {catalogue
+              .filter(
+                (candidate) =>
+                  candidate.id !== product.id &&
+                  candidate.categories.some((category) =>
+                    product.categories.includes(category),
+                  ),
+              )
+              .slice(0, 3)
+              .map((candidate) => (
+                <Link
+                  className="group hover:bg-muted rounded-xl border p-4 transition-colors"
+                  href={`/${locale}/products/${candidate.slug}`}
+                  key={candidate.id}
+                >
+                  {candidate.primaryImage ? (
+                    <div className="bg-muted relative aspect-square overflow-hidden rounded-lg">
+                      <Image
+                        alt={candidate.primaryImage.altText ?? candidate.name}
+                        className="object-cover transition-transform group-hover:scale-105"
+                        fill
+                        sizes="(max-width: 640px) 100vw, 20rem"
+                        src={candidate.primaryImage.url}
+                        unoptimized
+                      />
+                    </div>
+                  ) : null}
+                  <p className="mt-4 font-medium">{candidate.name}</p>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    {candidate.productNumber}
+                  </p>
+                </Link>
+              ))}
           </div>
         </section>
       ) : null}
