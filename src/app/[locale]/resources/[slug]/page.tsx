@@ -33,6 +33,7 @@ export default async function ResourceDetailPage({
           back: "Back to resources",
           label: caseStudy ? "Case study" : "Resource",
         };
+  const downloadLabel = locale === "zh" ? "下载资料" : "Download resource";
 
   return (
     <article className="mx-auto max-w-3xl px-5 py-16 lg:px-8 lg:py-24">
@@ -53,6 +54,15 @@ export default async function ResourceDetailPage({
       <div className="mt-10 text-lg leading-8 whitespace-pre-line">
         {entry.body}
       </div>
+      {entry.attachments.length > 0 ? (
+        <section className="mt-10 space-y-3 rounded-xl border p-5">
+          {entry.attachments.map((attachment) => (
+            <Button asChild key={attachment.url} variant="outline">
+              <a href={attachment.url}>{attachment.title ?? downloadLabel}</a>
+            </Button>
+          ))}
+        </section>
+      ) : null}
     </article>
   );
 }

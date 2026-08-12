@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -31,6 +32,7 @@ export default async function ResourcesPage({
           resources: "资料中心",
           cta: "浏览商品目录",
           details: "查看详情",
+          viewResource: "查看资料",
           memberContent: "登录后可访问仅向会员开放的资料、案例与采购支持内容。",
           signIn: "登录查看会员资料",
         }
@@ -40,6 +42,7 @@ export default async function ResourcesPage({
           resources: "Resources",
           cta: "Browse catalogue",
           details: "View details",
+          viewResource: "Open resource",
           memberContent:
             "Sign in to access member-only resources, cases and procurement support content.",
           signIn: "Sign in for member resources",
@@ -76,6 +79,18 @@ export default async function ResourcesPage({
           <div className="grid gap-5 md:grid-cols-2">
             {entries.map((entry) => (
               <Card key={entry.slug}>
+                {entry.coverImage ? (
+                  <div className="bg-muted relative aspect-[16/9] overflow-hidden">
+                    <Image
+                      alt={entry.coverImage.altText ?? entry.title}
+                      className="object-cover"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      src={entry.coverImage.url}
+                      unoptimized
+                    />
+                  </div>
+                ) : null}
                 <CardHeader>
                   <CardTitle>{entry.title}</CardTitle>
                 </CardHeader>
@@ -85,7 +100,9 @@ export default async function ResourcesPage({
                   </p>
                   <Button asChild className="mt-5" variant="outline">
                     <Link href={`/${locale}/resources/${entry.slug}`}>
-                      {copy.details}
+                      {entry.attachments.length > 0
+                        ? copy.viewResource
+                        : copy.details}
                     </Link>
                   </Button>
                 </CardContent>

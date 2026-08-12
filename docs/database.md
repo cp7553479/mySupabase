@@ -48,7 +48,7 @@ LogoPress 使用已链接的 Supabase 项目 `nizvigrplhvbvafwvcmy`。`SPEC.md` 
 
 ## Storage
 
-- `product-media`：公开读取；仅目录或内容管理员可写；
+- `product-media`：公开读取；仅目录或内容管理员可写。目录媒体与公开内容素材分别放在对应业务路径中；
 - `inquiry-attachments`：私有；单文件上限 25 MiB，客户对象路径以 `{auth.uid()}/` 开头，询单参与者按 RLS 读取。
 
 应用先上传私有文件，再写入 `inquiry_attachments` 元数据。更新同一路径时，Storage 同时需要 `INSERT`、`SELECT` 和 `UPDATE` 权限。

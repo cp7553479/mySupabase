@@ -202,6 +202,9 @@ test("published cases, FAQ and resources are available from Supabase", async ({
   await expect(
     page.getByText("Custom product enquiry checklist"),
   ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Open resource" }),
+  ).toHaveAttribute("href", "/en/resources/custom-product-enquiry-checklist");
   await page.getByRole("link", { name: "View details" }).first().click();
   await expect(
     page.getByRole("heading", { name: "Event-ready brand kits" }),
@@ -214,6 +217,14 @@ test("published cases, FAQ and resources are available from Supabase", async ({
       "Select a quantity on the product page to see the applicable tier.",
     ),
   ).toBeVisible();
+
+  await page.goto("/en/resources/custom-product-enquiry-checklist");
+  await expect(
+    page.getByRole("link", { name: "Custom product enquiry checklist" }),
+  ).toHaveAttribute(
+    "href",
+    /\/storage\/v1\/object\/public\/product-media\/content-preview\/resources\/custom-product-enquiry-checklist\.txt$/,
+  );
 });
 
 test("catalogue uses preview products, images and quantity-tier pricing", async ({

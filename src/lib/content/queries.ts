@@ -1,10 +1,13 @@
 import { cache } from "react";
 
 import { getPublishedCatalogueProducts } from "@/lib/catalogue/queries";
+import { getSupabasePublicEnvironment } from "@/lib/env/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type PublishedArticle = {
+  attachments: ContentAttachment[];
   body: string;
+  coverImage: ContentImage | null;
   excerpt: string | null;
   id: string;
   publishedAt: string | null;
@@ -14,6 +17,15 @@ export type PublishedArticle = {
   title: string;
   topics: ContentTopic[];
 };
+
+export type ContentAttachment = {
+  filename: string;
+  mimeType: string | null;
+  title: string | null;
+  url: string;
+};
+
+export type ContentImage = { altText: string | null; url: string };
 
 export type ContentTopic = {
   name: string;
@@ -58,13 +70,35 @@ type ContentTopicRow = {
   slug: string;
 };
 
+type ContentMediaRelationRow = {
+  content_entry_id: string;
+  media_asset_id: string;
+  sort_order: number;
+  usage_type: "attachment" | "cover" | "inline";
+};
+
+type ContentMediaAssetRow = {
+  alt_text: string | null;
+  bucket_id: string | null;
+  external_url: string | null;
+  filename: string | null;
+  id: string;
+  mime_type: string | null;
+  object_path: string | null;
+  title: string | null;
+};
+
 function toArticle(
   entry: ContentEntryRow,
   translation: ContentTranslationRow | undefined,
   topics: ContentTopic[],
+  coverImage: ContentImage | null,
+  attachments: ContentAttachment[],
 ): PublishedArticle {
   return {
+    attachments,
     body: translation?.body ?? entry.body ?? "",
+    coverImage,
     excerpt: translation?.excerpt ?? entry.excerpt,
     id: entry.id,
     publishedAt: entry.published_at,
@@ -74,6 +108,18 @@ function toArticle(
     title: translation?.title ?? entry.title,
     topics,
   };
+}
+
+function getMediaUrl(asset: ContentMediaAssetRow) {
+  if (asset.external_url) {
+    return asset.external_url;
+  }
+
+  if (!asset.bucket_id || !asset.object_path) {
+    return null;
+  }
+
+  return `${getSupabasePublicEnvironment().url}/storage/v1/object/public/${asset.bucket_id}/${asset.object_path}`;
 }
 
 export const getPublishedContent = cache(
@@ -164,13 +210,98 @@ export const getPublishedContent = cache(
       }
     }
 
-    return contentEntries.map((entry) =>
-      toArticle(
+    const entryIds = contentEntries.map((entry) => entry.id);
+    const { data: mediaRelationsData, error: mediaRelationsError } =
+      entryIds.length
+        ? await supabase
+            .from("content_media")
+            .select("content_entry_id, media_asset_id, usage_type, sort_order")
+            .in("content_entry_id", entryIds)
+            .order("sort_order")
+        : { data: [], error: null };
+
+    if (mediaRelationsError) {
+      throw new Error(
+        `Could not read content media relations: ${mediaRelationsError.message}`,
+      );
+    }
+
+    const mediaRelations = mediaRelationsData as ContentMediaRelationRow[];
+    const mediaAssetIds = [
+      ...new Set(mediaRelations.map((relation) => relation.media_asset_id)),
+    ];
+    const { data: mediaAssetsData, error: mediaAssetsError } =
+      mediaAssetIds.length
+        ? await supabase
+            .from("media_assets")
+            .select(
+              "id, bucket_id, object_path, external_url, filename, mime_type, title, alt_text",
+            )
+            .in("id", mediaAssetIds)
+        : { data: [], error: null };
+
+    if (mediaAssetsError) {
+      throw new Error(
+        `Could not read content media: ${mediaAssetsError.message}`,
+      );
+    }
+
+    const mediaAssetById = new Map(
+      (mediaAssetsData as ContentMediaAssetRow[]).map((asset) => [
+        asset.id,
+        asset,
+      ]),
+    );
+    const mediaByEntryId = new Map<string, ContentMediaRelationRow[]>();
+    for (const relation of mediaRelations) {
+      const entryMedia = mediaByEntryId.get(relation.content_entry_id) ?? [];
+      entryMedia.push(relation);
+      mediaByEntryId.set(relation.content_entry_id, entryMedia);
+    }
+
+    return contentEntries.map((entry) => {
+      const assets = (mediaByEntryId.get(entry.id) ?? [])
+        .map((relation) => ({
+          asset: mediaAssetById.get(relation.media_asset_id),
+          relation,
+        }))
+        .filter(
+          (
+            item,
+          ): item is {
+            asset: ContentMediaAssetRow;
+            relation: ContentMediaRelationRow;
+          } => item.asset !== undefined && getMediaUrl(item.asset) !== null,
+        );
+      const cover = assets.find((item) => item.relation.usage_type === "cover");
+      const coverUrl = cover ? getMediaUrl(cover.asset) : null;
+      const attachments = assets
+        .filter((item) => item.relation.usage_type === "attachment")
+        .flatMap((item) => {
+          const url = getMediaUrl(item.asset);
+          return url
+            ? [
+                {
+                  filename:
+                    item.asset.filename ?? item.asset.title ?? "resource",
+                  mimeType: item.asset.mime_type,
+                  title: item.asset.title,
+                  url,
+                },
+              ]
+            : [];
+        });
+
+      return toArticle(
         entry,
         translationByEntryId.get(entry.id),
         topicsByEntryId.get(entry.id) ?? [],
-      ),
-    );
+        coverUrl
+          ? { altText: cover?.asset.alt_text ?? entry.title, url: coverUrl }
+          : null,
+        attachments,
+      );
+    });
   },
 );
 
