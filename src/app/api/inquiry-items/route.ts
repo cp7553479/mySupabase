@@ -11,6 +11,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type AddInquiryItemRequest = {
   customerNote?: unknown;
+  enteredValues?: unknown;
   productId?: unknown;
   quantity?: unknown;
   requiredDate?: unknown;
@@ -36,6 +37,7 @@ type PriceTierRow = {
 
 type OptionGroupRow = {
   id: string;
+  input_type: "file" | "multi_select" | "number" | "single_select" | "text";
   is_required: boolean;
   maximum_selections: number | null;
   minimum_selections: number;
@@ -43,6 +45,8 @@ type OptionGroupRow = {
 };
 
 type OptionValueRow = { id: string; label: string; option_group_id: string };
+
+type EnteredValue = { enteredValue: string; optionGroupId: string };
 
 type InquiryRow = { id: string; inquiry_number: string };
 
@@ -60,6 +64,19 @@ function isSelection(value: unknown): value is ProductOptionSelection {
   return (
     typeof selection.optionGroupId === "string" &&
     typeof selection.optionValueId === "string"
+  );
+}
+
+function isEnteredValue(value: unknown): value is EnteredValue {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const enteredValue = value as Record<string, unknown>;
+
+  return (
+    typeof enteredValue.optionGroupId === "string" &&
+    typeof enteredValue.enteredValue === "string"
   );
 }
 
@@ -82,6 +99,15 @@ export async function POST(request: Request) {
   const selections = Array.isArray(payload.selections)
     ? payload.selections.filter(isSelection)
     : null;
+  const enteredValues = Array.isArray(payload.enteredValues)
+    ? payload.enteredValues
+        .filter(isEnteredValue)
+        .map((value) => ({
+          enteredValue: value.enteredValue.trim(),
+          optionGroupId: value.optionGroupId,
+        }))
+        .filter((value) => value.enteredValue)
+    : [];
   const serviceCodes = Array.isArray(payload.serviceCodes)
     ? [
         ...new Set(
@@ -184,7 +210,9 @@ export async function POST(request: Request) {
   const [groupsResult, valuesResult, rulesResult] = await Promise.all([
     supabase
       .from("product_option_groups")
-      .select("id, name, is_required, minimum_selections, maximum_selections")
+      .select(
+        "id, name, input_type, is_required, minimum_selections, maximum_selections",
+      )
       .eq("product_id", product.id)
       .eq("is_active", true),
     selectedValueIds.length
@@ -203,6 +231,37 @@ export async function POST(request: Request) {
   ]);
   const groups = (groupsResult.data ?? []) as OptionGroupRow[];
   const values = (valuesResult.data ?? []) as OptionValueRow[];
+  const selectableGroups = groups.filter(
+    (group) =>
+      group.input_type === "single_select" ||
+      group.input_type === "multi_select",
+  );
+  const enteredValuesByGroup = new Map(
+    enteredValues.map((value) => [value.optionGroupId, value.enteredValue]),
+  );
+  const inputValidationError =
+    groups.some((group) => {
+      const enteredValue = enteredValuesByGroup.get(group.id);
+
+      if (group.input_type === "text") {
+        return (
+          (group.is_required && !enteredValue) ||
+          (enteredValue !== undefined && enteredValue.length > 2_000)
+        );
+      }
+
+      if (group.input_type === "number") {
+        return (
+          (group.is_required && !enteredValue) ||
+          (enteredValue !== undefined && !Number.isFinite(Number(enteredValue)))
+        );
+      }
+
+      return enteredValue !== undefined;
+    }) ||
+    enteredValues.some(
+      (value) => !groups.some((group) => group.id === value.optionGroupId),
+    );
   const rules = (rulesResult.data ?? []).map((rule): ProductOptionRule => ({
     message: rule.message,
     relatedOptionValueId: rule.related_option_value_id,
@@ -210,7 +269,7 @@ export async function POST(request: Request) {
     subjectOptionValueId: rule.subject_option_value_id,
   }));
   const optionValidationError = validateProductOptionSelections(
-    groups.map((group): ProductOptionGroupConstraint => ({
+    selectableGroups.map((group): ProductOptionGroupConstraint => ({
       id: group.id,
       isRequired: group.is_required,
       maximumSelections: group.maximum_selections,
@@ -228,6 +287,7 @@ export async function POST(request: Request) {
     groupsResult.error ||
     valuesResult.error ||
     rulesResult.error ||
+    inputValidationError ||
     optionValidationError
   ) {
     return NextResponse.json(
@@ -304,14 +364,23 @@ export async function POST(request: Request) {
 
   if (groups.length > 0) {
     const groupNames = new Map(groups.map((group) => [group.id, group.name]));
-    const optionRows = values.map((value, index) => ({
-      inquiry_item_id: itemData.id,
-      option_group_id: value.option_group_id,
-      option_group_name_snapshot: groupNames.get(value.option_group_id) ?? "",
-      option_value_id: value.id,
-      option_value_snapshot: value.label,
-      sort_order: index,
-    }));
+    const optionRows = [
+      ...values.map((value, index) => ({
+        inquiry_item_id: itemData.id,
+        option_group_id: value.option_group_id,
+        option_group_name_snapshot: groupNames.get(value.option_group_id) ?? "",
+        option_value_id: value.id,
+        option_value_snapshot: value.label,
+        sort_order: index,
+      })),
+      ...enteredValues.map((value, index) => ({
+        entered_value: value.enteredValue,
+        inquiry_item_id: itemData.id,
+        option_group_id: value.optionGroupId,
+        option_group_name_snapshot: groupNames.get(value.optionGroupId) ?? "",
+        sort_order: values.length + index,
+      })),
+    ];
     const { error: optionError } = await supabase
       .from("inquiry_item_option_selections")
       .insert(optionRows);

@@ -26,6 +26,9 @@ export function ProductConfigurator({
   const [quantity, setQuantity] = useState(minimumOrderQuantity ?? 1);
   const [customerNote, setCustomerNote] = useState("");
   const [requiredDate, setRequiredDate] = useState("");
+  const [enteredValues, setEnteredValues] = useState<Record<string, string>>(
+    {},
+  );
   const [selections, setSelections] = useState<Record<string, string[]>>({});
   const [serviceCodes, setServiceCodes] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
@@ -64,6 +67,10 @@ export function ProductConfigurator({
     }
 
     const missingRequired = optionGroups.some((group) => {
+      if (group.inputType === "text" || group.inputType === "number") {
+        return group.isRequired && !enteredValues[group.id]?.trim();
+      }
+
       const minimumSelections = Math.max(
         group.minimumSelections,
         group.isRequired ? 1 : 0,
@@ -90,6 +97,12 @@ export function ProductConfigurator({
               optionValueId,
             })),
         ),
+        enteredValues: Object.entries(enteredValues)
+          .filter(([, value]) => value.trim())
+          .map(([optionGroupId, enteredValue]) => ({
+            enteredValue: enteredValue.trim(),
+            optionGroupId,
+          })),
       }),
       headers: { "Content-Type": "application/json" },
       method: "POST",
@@ -177,30 +190,47 @@ export function ProductConfigurator({
           {group.description ? (
             <p className="text-muted-foreground text-sm">{group.description}</p>
           ) : null}
-          <div className="flex flex-wrap gap-2">
-            {group.values.map((value) => (
-              <Button
-                aria-pressed={selections[group.id]?.includes(value.id) ?? false}
-                key={value.id}
-                onClick={() =>
-                  toggleSelection(
-                    group.id,
-                    value.id,
-                    group.inputType,
-                    group.maximumSelections,
-                  )
-                }
-                type="button"
-                variant={
-                  selections[group.id]?.includes(value.id)
-                    ? "default"
-                    : "outline"
-                }
-              >
-                {value.label}
-              </Button>
-            ))}
-          </div>
+          {group.inputType === "text" || group.inputType === "number" ? (
+            <input
+              className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
+              inputMode={group.inputType === "number" ? "decimal" : undefined}
+              onChange={(event) =>
+                setEnteredValues((current) => ({
+                  ...current,
+                  [group.id]: event.target.value,
+                }))
+              }
+              type={group.inputType === "number" ? "number" : "text"}
+              value={enteredValues[group.id] ?? ""}
+            />
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {group.values.map((value) => (
+                <Button
+                  aria-pressed={
+                    selections[group.id]?.includes(value.id) ?? false
+                  }
+                  key={value.id}
+                  onClick={() =>
+                    toggleSelection(
+                      group.id,
+                      value.id,
+                      group.inputType,
+                      group.maximumSelections,
+                    )
+                  }
+                  type="button"
+                  variant={
+                    selections[group.id]?.includes(value.id)
+                      ? "default"
+                      : "outline"
+                  }
+                >
+                  {value.label}
+                </Button>
+              ))}
+            </div>
+          )}
         </fieldset>
       ))}
       {services.length > 0 ? (
