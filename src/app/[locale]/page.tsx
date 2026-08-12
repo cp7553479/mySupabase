@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRightIcon, CheckIcon, SparklesIcon } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -75,8 +76,16 @@ export default async function LocaleHomePage({
               ))}
             </div>
           </div>
-          <div className="relative flex min-h-90 overflow-hidden rounded-3xl border bg-[radial-gradient(circle_at_24%_22%,oklch(0.95_0.03_83),transparent_25%),radial-gradient(circle_at_75%_30%,oklch(0.86_0.08_88),transparent_28%),linear-gradient(135deg,oklch(0.98_0.01_90),oklch(0.89_0.04_75))] p-6 lg:min-h-132 lg:p-10">
-            <div className="bg-background/80 relative z-10 mt-auto max-w-sm rounded-2xl border border-black/10 p-6 shadow-sm backdrop-blur">
+          <div className="bg-muted relative flex min-h-90 overflow-hidden rounded-3xl border p-6 lg:min-h-132 lg:p-10">
+            <Image
+              alt="Unbranded custom-product samples prepared for a LogoPress enquiry"
+              className="object-cover"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 55vw"
+              src="/brand/logopress-hero.png"
+            />
+            <div className="bg-background/85 relative z-10 mt-auto max-w-sm rounded-2xl border border-black/10 p-6 shadow-sm backdrop-blur">
               <p className="text-muted-foreground text-sm font-semibold tracking-[0.16em] uppercase">
                 LogoPress
               </p>
@@ -84,9 +93,6 @@ export default async function LocaleHomePage({
                 Built for product ideas that need a considered finish.
               </p>
             </div>
-            <div className="bg-background/70 absolute top-10 right-8 size-36 rotate-12 rounded-[2rem] border border-black/10 shadow-xl" />
-            <div className="bg-foreground/90 absolute right-24 bottom-12 size-32 -rotate-12 rounded-full border border-black/10 shadow-xl" />
-            <div className="bg-background/90 absolute top-1/2 right-1/3 size-20 rotate-45 rounded-3xl border border-black/10 shadow-lg" />
           </div>
         </div>
       </section>
