@@ -131,3 +131,21 @@ test("public navigation is keyboard reachable and unknown public pages give a re
     page.getByRole("link", { name: "Return to home" }),
   ).toBeVisible();
 });
+
+test("published blog content is listed and rendered from Supabase", async ({
+  page,
+}) => {
+  await page.goto("/en/insights");
+  await expect(
+    page.getByText("Preparing a B2B custom-product enquiry"),
+  ).toBeVisible();
+
+  await page
+    .locator('[data-slot="card"]')
+    .filter({ hasText: "Preparing a B2B custom-product enquiry" })
+    .getByRole("link", { name: "Read article" })
+    .click();
+  await expect(
+    page.getByText("A stronger enquiry begins with a clear product direction"),
+  ).toBeVisible();
+});
