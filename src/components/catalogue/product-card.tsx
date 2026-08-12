@@ -53,6 +53,11 @@ export function ProductCard({ locale, product }: Readonly<ProductCardProps>) {
             </span>
           ) : null}
         </div>
+        {product.categories[0] ? (
+          <p className="text-muted-foreground text-xs font-medium tracking-[0.08em] uppercase">
+            {product.categories[0]}
+          </p>
+        ) : null}
         <div className="space-y-2">
           <h2 className="text-xl font-semibold tracking-[-0.02em]">
             {product.name}

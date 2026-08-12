@@ -42,6 +42,8 @@ export default async function ProductDetailPage({
           moq: "起订量",
           price: "数量阶梯价格",
           quantity: "数量",
+          services: "可用服务",
+          specifications: "商品规格",
         }
       : {
           back: "Back to catalogue",
@@ -50,6 +52,8 @@ export default async function ProductDetailPage({
           moq: "Minimum order quantity",
           price: "Quantity-tier pricing",
           quantity: "Quantity",
+          services: "Available services",
+          specifications: "Specifications",
         };
 
   return (
@@ -74,6 +78,11 @@ export default async function ProductDetailPage({
         <div className="space-y-8">
           <div className="space-y-4">
             <Badge variant="secondary">{product.productNumber}</Badge>
+            {product.categories.length > 0 ? (
+              <p className="text-muted-foreground text-sm">
+                {product.categories.join(" · ")}
+              </p>
+            ) : null}
             <h1 className="text-4xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl">
               {product.name}
             </h1>
@@ -125,6 +134,37 @@ export default async function ProductDetailPage({
           <p className="text-muted-foreground leading-8">
             {product.description}
           </p>
+        </section>
+      ) : null}
+      {product.specifications.length > 0 ? (
+        <section className="mt-16 max-w-3xl space-y-4">
+          <h2 className="text-2xl font-semibold">{copy.specifications}</h2>
+          <dl className="divide-y rounded-lg border">
+            {product.specifications.map((specification) => (
+              <div
+                className="grid gap-1 px-4 py-3 sm:grid-cols-[minmax(10rem,1fr)_2fr] sm:gap-6"
+                key={`${specification.group}-${specification.name}`}
+              >
+                <dt className="text-muted-foreground">{specification.name}</dt>
+                <dd>
+                  {specification.value}
+                  {specification.unit ? ` ${specification.unit}` : ""}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : null}
+      {product.services.length > 0 ? (
+        <section className="mt-16 max-w-3xl space-y-4">
+          <h2 className="text-2xl font-semibold">{copy.services}</h2>
+          <div className="flex flex-wrap gap-2">
+            {product.services.map((service) => (
+              <Badge key={service} variant="secondary">
+                {service}
+              </Badge>
+            ))}
+          </div>
         </section>
       ) : null}
     </article>

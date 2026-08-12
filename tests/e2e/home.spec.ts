@@ -174,6 +174,10 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
     .click();
   await expect(page.getByText("Quantity-tier pricing")).toBeVisible();
   await expect(page.getByText("50–99 Quantity")).toBeVisible();
+  await expect(page.getByText("Radios")).toBeVisible();
+  await expect(page.getByText("Specifications")).toBeVisible();
+  await expect(page.getByText("Length")).toBeVisible();
+  await expect(page.getByText("Available services")).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Add to enquiry list" }),
   ).toBeVisible();

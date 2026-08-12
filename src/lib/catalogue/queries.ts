@@ -4,6 +4,7 @@ import { getSupabasePublicEnvironment } from "@/lib/env/public";
 import { createPublicSupabaseClient } from "@/lib/supabase/client";
 
 export type CatalogueProduct = {
+  categories: string[];
   currencyCode: string;
   minimumOrderQuantity: number | null;
   name: string;
@@ -28,6 +29,15 @@ export type CataloguePriceTier = {
 export type CatalogueProductDetail = CatalogueProduct & {
   description: string | null;
   priceTiers: CataloguePriceTier[];
+  services: string[];
+  specifications: CatalogueSpecification[];
+};
+
+export type CatalogueSpecification = {
+  group: string | null;
+  name: string;
+  unit: string | null;
+  value: string;
 };
 
 type ProductRow = {
@@ -73,6 +83,42 @@ type PriceTierRow = {
   minimum_quantity: number;
   price_grid_id: string;
   unit_price: number;
+};
+
+type ProductTaxonomyTermRow = {
+  product_id: string;
+  sort_order: number;
+  taxonomy_term_id: string;
+};
+
+type TaxonomyRow = {
+  code: string;
+  id: string;
+};
+
+type TaxonomyTermRow = {
+  id: string;
+  name: string;
+  taxonomy_id: string;
+};
+
+type ProductSpecificationRow = {
+  name: string;
+  product_id: string;
+  sort_order: number;
+  specification_group: string | null;
+  unit: string | null;
+  value: string;
+};
+
+type ProductServiceRow = {
+  product_id: string;
+  service_code: string;
+};
+
+type ServiceRow = {
+  code: string;
+  name: string;
 };
 
 function applyTranslation(
@@ -165,13 +211,27 @@ async function getPublishedProductRows(locale: string) {
       assets: [],
       grids: [],
       media: [],
+      productTaxonomyTerms: [],
       products: productRows,
+      serviceDefinitions: [],
+      services: [],
+      specifications: [],
+      taxonomies: [],
+      taxonomyTerms: [],
       tiers: [],
       translations: [],
     };
   }
 
-  const [translationsResult, mediaResult, gridsResult] = await Promise.all([
+  const [
+    translationsResult,
+    mediaResult,
+    gridsResult,
+    productTaxonomyResult,
+    specificationsResult,
+    servicesResult,
+    taxonomiesResult,
+  ] = await Promise.all([
     supabase
       .from("product_translations")
       .select("product_id, name, short_description, description")
@@ -187,9 +247,33 @@ async function getPublishedProductRows(locale: string) {
       .in("product_id", productIds)
       .eq("is_default", true)
       .eq("is_active", true),
+    supabase
+      .from("product_taxonomy_terms")
+      .select("product_id, taxonomy_term_id, sort_order")
+      .in("product_id", productIds)
+      .order("sort_order"),
+    supabase
+      .from("product_specifications")
+      .select("product_id, specification_group, name, value, unit, sort_order")
+      .in("product_id", productIds)
+      .order("sort_order"),
+    supabase
+      .from("product_services")
+      .select("product_id, service_code")
+      .in("product_id", productIds)
+      .eq("is_available", true),
+    supabase.from("taxonomies").select("id, code").eq("is_active", true),
   ]);
 
-  for (const result of [translationsResult, mediaResult, gridsResult]) {
+  for (const result of [
+    translationsResult,
+    mediaResult,
+    gridsResult,
+    productTaxonomyResult,
+    specificationsResult,
+    servicesResult,
+    taxonomiesResult,
+  ]) {
     if (result.error) {
       throw new Error(`Could not read catalogue data: ${result.error.message}`);
     }
@@ -197,9 +281,19 @@ async function getPublishedProductRows(locale: string) {
 
   const media = mediaResult.data as ProductMediaRow[];
   const grids = gridsResult.data as PriceGridRow[];
+  const productTaxonomyTerms =
+    productTaxonomyResult.data as ProductTaxonomyTermRow[];
   const gridIds = grids.map((grid) => grid.id);
   const mediaAssetIds = media.map((item) => item.media_asset_id);
-  const [assetsResult, tiersResult] = await Promise.all([
+  const taxonomyTermIds = productTaxonomyTerms.map(
+    (association) => association.taxonomy_term_id,
+  );
+  const [
+    assetsResult,
+    tiersResult,
+    taxonomyTermsResult,
+    serviceDefinitionsResult,
+  ] = await Promise.all([
     mediaAssetIds.length
       ? supabase
           .from("media_assets")
@@ -215,9 +309,21 @@ async function getPublishedProductRows(locale: string) {
           .in("price_grid_id", gridIds)
           .order("minimum_quantity")
       : Promise.resolve({ data: [], error: null }),
+    taxonomyTermIds.length
+      ? supabase
+          .from("taxonomy_terms")
+          .select("id, taxonomy_id, name")
+          .in("id", taxonomyTermIds)
+      : Promise.resolve({ data: [], error: null }),
+    supabase.from("services").select("code, name").eq("is_active", true),
   ]);
 
-  for (const result of [assetsResult, tiersResult]) {
+  for (const result of [
+    assetsResult,
+    tiersResult,
+    taxonomyTermsResult,
+    serviceDefinitionsResult,
+  ]) {
     if (result.error) {
       throw new Error(`Could not read catalogue data: ${result.error.message}`);
     }
@@ -227,6 +333,12 @@ async function getPublishedProductRows(locale: string) {
     grids,
     media,
     products: productRows,
+    productTaxonomyTerms,
+    services: servicesResult.data as ProductServiceRow[],
+    serviceDefinitions: serviceDefinitionsResult.data as ServiceRow[],
+    specifications: specificationsResult.data as ProductSpecificationRow[],
+    taxonomies: taxonomiesResult.data as TaxonomyRow[],
+    taxonomyTerms: taxonomyTermsResult.data as TaxonomyTermRow[],
     tiers: tiersResult.data as PriceTierRow[],
     translations: translationsResult.data as ProductTranslationRow[],
     assets: assetsResult.data as MediaAssetRow[],
@@ -243,6 +355,15 @@ function toCatalogueProducts(
     ]),
   );
   const mediaById = new Map(rows.assets.map((asset) => [asset.id, asset]));
+  const taxonomyTermsById = new Map(
+    rows.taxonomyTerms.map((term) => [term.id, term]),
+  );
+  const categoryTaxonomyId = rows.taxonomies.find(
+    (taxonomy) => taxonomy.code === "category",
+  )?.id;
+  const serviceNamesByCode = new Map(
+    rows.serviceDefinitions.map((service) => [service.code, service.name]),
+  );
 
   return rows.products.map((product) => {
     const translation = applyTranslation(
@@ -250,8 +371,29 @@ function toCatalogueProducts(
       translationsByProductId.get(product.id),
     );
     const priceTiers = toTiers(product.id, rows.grids, rows.tiers);
+    const categories = rows.productTaxonomyTerms
+      .filter((association) => association.product_id === product.id)
+      .map((association) => taxonomyTermsById.get(association.taxonomy_term_id))
+      .filter(
+        (term): term is TaxonomyTermRow =>
+          term !== undefined && term.taxonomy_id === categoryTaxonomyId,
+      )
+      .map((term) => term.name);
+    const specifications = rows.specifications
+      .filter((specification) => specification.product_id === product.id)
+      .map((specification) => ({
+        group: specification.specification_group,
+        name: specification.name,
+        unit: specification.unit,
+        value: specification.value,
+      }));
+    const services = rows.services
+      .filter((service) => service.product_id === product.id)
+      .map((service) => serviceNamesByCode.get(service.service_code))
+      .filter((service): service is string => service !== undefined);
 
     return {
+      categories,
       currencyCode: product.default_currency_code,
       minimumOrderQuantity: product.minimum_order_quantity,
       name: translation.name,
@@ -262,6 +404,8 @@ function toCatalogueProducts(
       summary: translation.summary,
       description: translation.description,
       priceTiers,
+      services,
+      specifications,
     };
   });
 }
@@ -270,6 +414,7 @@ export const getPublishedCatalogueProducts = cache(async (locale: string) => {
   const rows = await getPublishedProductRows(locale);
 
   return toCatalogueProducts(rows).map((product) => ({
+    categories: product.categories,
     currencyCode: product.currencyCode,
     minimumOrderQuantity: product.minimumOrderQuantity,
     name: product.name,
