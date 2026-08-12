@@ -1,6 +1,11 @@
 import { cache } from "react";
 
 import { getSupabasePublicEnvironment } from "@/lib/env/public";
+import type {
+  CatalogueUpcharge,
+  ProductUpchargeCriterion,
+  ProductUpchargeTier,
+} from "@/lib/catalogue/pricing";
 import { createPublicSupabaseClient } from "@/lib/supabase/client";
 
 export type CatalogueProduct = {
@@ -38,6 +43,7 @@ export type CatalogueProductDetail = CatalogueProduct & {
   relatedProductIds: string[];
   services: CatalogueService[];
   specifications: CatalogueSpecification[];
+  upcharges: CatalogueUpcharge[];
 };
 
 export type CatalogueService = {
@@ -184,6 +190,29 @@ type ProductRelatedRow = {
   sort_order: number;
 };
 
+type ProductUpchargeGridRow = {
+  adjustment_type: "fixed" | "per_unit" | "percentage";
+  application_level: "item" | "option" | "service";
+  id: string;
+  name: string;
+  product_id: string;
+};
+
+type ProductUpchargeCriterionRow = {
+  criterion_value: string | null;
+  operator: "equals" | "excludes" | "includes" | "not_equals";
+  option_value_id: string | null;
+  taxonomy_term_id: string | null;
+  upcharge_grid_id: string;
+};
+
+type ProductUpchargeTierRow = {
+  amount: number;
+  maximum_quantity: number | null;
+  minimum_quantity: number;
+  upcharge_grid_id: string;
+};
+
 function applyTranslation(
   product: ProductRow,
   translation: ProductTranslationRow | undefined,
@@ -316,6 +345,9 @@ async function getPublishedProductRows(locale: string) {
       taxonomyTerms: [],
       tiers: [],
       translations: [],
+      upchargeCriteria: [],
+      upchargeGrids: [],
+      upchargeTiers: [],
     };
   }
 
@@ -329,6 +361,7 @@ async function getPublishedProductRows(locale: string) {
     taxonomiesResult,
     optionGroupsResult,
     relatedProductsResult,
+    upchargeGridsResult,
   ] = await Promise.all([
     supabase
       .from("product_translations")
@@ -376,6 +409,12 @@ async function getPublishedProductRows(locale: string) {
       .select("product_id, related_product_id, sort_order")
       .in("product_id", productIds)
       .order("sort_order"),
+    supabase
+      .from("product_upcharge_grids")
+      .select("id, product_id, name, adjustment_type, application_level")
+      .in("product_id", productIds)
+      .eq("is_active", true)
+      .order("sort_order"),
   ]);
 
   for (const result of [
@@ -388,6 +427,7 @@ async function getPublishedProductRows(locale: string) {
     taxonomiesResult,
     optionGroupsResult,
     relatedProductsResult,
+    upchargeGridsResult,
   ]) {
     if (result.error) {
       throw new Error(`Could not read catalogue data: ${result.error.message}`);
@@ -405,12 +445,16 @@ async function getPublishedProductRows(locale: string) {
   );
   const optionGroups = optionGroupsResult.data as ProductOptionGroupRow[];
   const optionGroupIds = optionGroups.map((group) => group.id);
+  const upchargeGrids = upchargeGridsResult.data as ProductUpchargeGridRow[];
+  const upchargeGridIds = upchargeGrids.map((grid) => grid.id);
   const [
     assetsResult,
     tiersResult,
     taxonomyTermsResult,
     serviceDefinitionsResult,
     optionValuesResult,
+    upchargeCriteriaResult,
+    upchargeTiersResult,
   ] = await Promise.all([
     mediaAssetIds.length
       ? supabase
@@ -445,6 +489,23 @@ async function getPublishedProductRows(locale: string) {
           .eq("is_active", true)
           .order("sort_order")
       : Promise.resolve({ data: [], error: null }),
+    upchargeGridIds.length
+      ? supabase
+          .from("product_upcharge_criteria")
+          .select(
+            "upcharge_grid_id, operator, option_value_id, taxonomy_term_id, criterion_value",
+          )
+          .in("upcharge_grid_id", upchargeGridIds)
+      : Promise.resolve({ data: [], error: null }),
+    upchargeGridIds.length
+      ? supabase
+          .from("product_upcharge_tiers")
+          .select(
+            "upcharge_grid_id, minimum_quantity, maximum_quantity, amount",
+          )
+          .in("upcharge_grid_id", upchargeGridIds)
+          .order("minimum_quantity")
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   for (const result of [
@@ -453,6 +514,8 @@ async function getPublishedProductRows(locale: string) {
     taxonomyTermsResult,
     serviceDefinitionsResult,
     optionValuesResult,
+    upchargeCriteriaResult,
+    upchargeTiersResult,
   ]) {
     if (result.error) {
       throw new Error(`Could not read catalogue data: ${result.error.message}`);
@@ -474,6 +537,10 @@ async function getPublishedProductRows(locale: string) {
     taxonomyTerms: taxonomyTermsResult.data as TaxonomyTermRow[],
     tiers: tiersResult.data as PriceTierRow[],
     translations: translationsResult.data as ProductTranslationRow[],
+    upchargeCriteria:
+      upchargeCriteriaResult.data as ProductUpchargeCriterionRow[],
+    upchargeGrids,
+    upchargeTiers: upchargeTiersResult.data as ProductUpchargeTierRow[],
     assets: assetsResult.data as MediaAssetRow[],
   };
 }
@@ -564,6 +631,29 @@ function toCatalogueProducts(
       .filter((relation) => relation.product_id === product.id)
       .sort((left, right) => left.sort_order - right.sort_order)
       .map((relation) => relation.related_product_id);
+    const upcharges = rows.upchargeGrids
+      .filter((grid) => grid.product_id === product.id)
+      .map((grid) => ({
+        adjustmentType: grid.adjustment_type,
+        applicationLevel: grid.application_level,
+        criteria: rows.upchargeCriteria
+          .filter((criterion) => criterion.upcharge_grid_id === grid.id)
+          .map((criterion): ProductUpchargeCriterion => ({
+            criterionValue: criterion.criterion_value,
+            operator: criterion.operator,
+            optionValueId: criterion.option_value_id,
+            taxonomyTermId: criterion.taxonomy_term_id,
+          })),
+        id: grid.id,
+        name: grid.name,
+        tiers: rows.upchargeTiers
+          .filter((tier) => tier.upcharge_grid_id === grid.id)
+          .map((tier): ProductUpchargeTier => ({
+            amount: Number(tier.amount),
+            maximumQuantity: tier.maximum_quantity,
+            minimumQuantity: tier.minimum_quantity,
+          })),
+      }));
 
     return {
       categories,
@@ -586,6 +676,7 @@ function toCatalogueProducts(
       relatedProductIds,
       services,
       specifications,
+      upcharges,
     };
   });
 }

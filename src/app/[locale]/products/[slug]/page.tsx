@@ -192,6 +192,7 @@ export default async function ProductDetailPage({
             productId={product.id}
             priceTiers={product.priceTiers}
             services={product.services}
+            upcharges={product.upcharges}
           />
           <FavoriteButton locale={locale} productId={product.id} />
           <CompareButton locale={locale} productId={product.id} />

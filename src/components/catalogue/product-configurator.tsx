@@ -9,6 +9,10 @@ import type {
   CataloguePriceTier,
   CatalogueService,
 } from "@/lib/catalogue/queries";
+import {
+  calculateProductEstimate,
+  type CatalogueUpcharge,
+} from "@/lib/catalogue/pricing";
 
 type ProductConfiguratorProps = {
   currencyCode: string;
@@ -18,6 +22,7 @@ type ProductConfiguratorProps = {
   productId: string;
   priceTiers: CataloguePriceTier[];
   services: CatalogueService[];
+  upcharges: CatalogueUpcharge[];
 };
 
 export function ProductConfigurator({
@@ -28,6 +33,7 @@ export function ProductConfigurator({
   productId,
   priceTiers,
   services,
+  upcharges,
 }: Readonly<ProductConfiguratorProps>) {
   const [quantity, setQuantity] = useState(minimumOrderQuantity ?? 1);
   const [customerNote, setCustomerNote] = useState("");
@@ -47,12 +53,22 @@ export function ProductConfigurator({
       quantity >= tier.minimumQuantity &&
       (tier.maximumQuantity === null || quantity <= tier.maximumQuantity),
   );
+  const estimate = activeTier
+    ? calculateProductEstimate({
+        baseUnitPrice: activeTier.unitPrice,
+        optionValueIds: Object.values(selections).flat(),
+        quantity,
+        serviceCodes,
+        upcharges,
+      })
+    : null;
   const copy =
     locale === "zh"
       ? {
           add: "加入询单列表",
           applicablePrice: "当前阶梯单价",
           estimatedTotal: "当前预估商品金额",
+          configurationCharge: "配置附加费",
           note: "定制说明",
           quantity: "采购数量",
           requiredDate: "期望交期",
@@ -70,6 +86,7 @@ export function ProductConfigurator({
           add: "Add to enquiry list",
           applicablePrice: "Applicable tier price",
           estimatedTotal: "Current estimated item total",
+          configurationCharge: "Configuration add-on",
           note: "Customisation notes",
           quantity: "Quantity",
           requiredDate: "Requested delivery date",
@@ -210,7 +227,7 @@ export function ProductConfigurator({
           value={quantity}
         />
       </label>
-      {activeTier ? (
+      {activeTier && estimate ? (
         <div
           aria-live="polite"
           className="bg-muted/30 grid gap-3 rounded-lg border p-4 text-sm sm:grid-cols-2"
@@ -223,7 +240,7 @@ export function ProductConfigurator({
                 maximumFractionDigits: 2,
                 minimumFractionDigits: 2,
                 style: "currency",
-              }).format(activeTier.unitPrice)}
+              }).format(estimate.unitPrice)}
             </p>
           </div>
           <div>
@@ -234,9 +251,24 @@ export function ProductConfigurator({
                 maximumFractionDigits: 2,
                 minimumFractionDigits: 2,
                 style: "currency",
-              }).format(activeTier.unitPrice * quantity)}
+              }).format(estimate.total)}
             </p>
           </div>
+          {estimate.adjustmentTotal > 0 ? (
+            <div>
+              <p className="text-muted-foreground">
+                {copy.configurationCharge}
+              </p>
+              <p className="mt-1 font-semibold">
+                {new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", {
+                  currency: currencyCode,
+                  maximumFractionDigits: 2,
+                  minimumFractionDigits: 2,
+                  style: "currency",
+                }).format(estimate.adjustmentTotal)}
+              </p>
+            </div>
+          ) : null}
         </div>
       ) : null}
       <label className="block space-y-2">

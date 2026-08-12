@@ -49,6 +49,21 @@ test("a custom product explains its required artwork step before an enquiry is c
   ).toBeVisible();
 });
 
+test("a selected product option updates the live quantity-tier estimate", async ({
+  page,
+}) => {
+  await page.goto("/en/products/multi-band-wireless-vintage-radio");
+
+  await expect(page.getByText("Current estimated item total")).toBeVisible();
+  await expect(page.getByText("$698.50", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Full Color" }).click();
+
+  await expect(page.getByText("Configuration add-on")).toBeVisible();
+  await expect(page.getByText("$32.50", { exact: true })).toBeVisible();
+  await expect(page.getByText("$14.62", { exact: true })).toBeVisible();
+  await expect(page.getByText("$731.00", { exact: true })).toBeVisible();
+});
+
 test("cookie consent records the visitor choice", async ({ page }) => {
   await page.goto("/en");
   const consent = page.getByRole("complementary", { name: "Cookie consent" });
