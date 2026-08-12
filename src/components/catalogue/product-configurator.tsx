@@ -173,7 +173,7 @@ export function ProductConfigurator({
   }
 
   return (
-    <div className="space-y-6 rounded-xl border p-5">
+    <div className="space-y-6 rounded-xl border p-5" id="enquiry-configurator">
       <label className="block space-y-2">
         <span className="text-sm font-medium">{copy.quantity}</span>
         <input

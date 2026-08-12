@@ -42,10 +42,17 @@ function formatLeadTime(
 export function ProductCard({ locale, product }: Readonly<ProductCardProps>) {
   const labels =
     locale === "zh"
-      ? { from: "起", details: "查看商品", leadTime: "生产交期", moq: "起订量" }
+      ? {
+          from: "起",
+          details: "查看商品",
+          enquiry: "开始询单",
+          leadTime: "生产交期",
+          moq: "起订量",
+        }
       : {
           from: "from",
           details: "View product",
+          enquiry: "Start enquiry",
           leadTime: "Production lead time",
           moq: "MOQ",
         };
@@ -111,10 +118,17 @@ export function ProductCard({ locale, product }: Readonly<ProductCardProps>) {
           </p>
         ) : null}
       </CardContent>
-      <CardFooter className="pb-6">
+      <CardFooter className="grid gap-2 pb-6 sm:grid-cols-2">
         <Button asChild className="w-full" variant="outline">
           <Link href={`/${locale}/products/${product.slug}`}>
             {labels.details}
+          </Link>
+        </Button>
+        <Button asChild className="w-full">
+          <Link
+            href={`/${locale}/products/${product.slug}#enquiry-configurator`}
+          >
+            {labels.enquiry}
           </Link>
         </Button>
       </CardFooter>

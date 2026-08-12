@@ -271,8 +271,11 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
   await page
     .locator('[data-slot="card"]')
     .filter({ hasText: "Multi Band Wireless Vintage Radio with Flashlight" })
-    .getByRole("link", { name: "View product" })
+    .getByRole("link", { name: "Start enquiry" })
     .click();
+  await expect(page).toHaveURL(/#enquiry-configurator$/);
+  await expect(page.locator("#enquiry-configurator")).toBeVisible();
+
   await expect(page.getByText("Quantity-tier pricing")).toBeVisible();
   const productImages = page.locator(
     'section[aria-label="Product images"] img',
