@@ -274,9 +274,24 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
     .getByRole("link", { name: "View product" })
     .click();
   await expect(page.getByText("Quantity-tier pricing")).toBeVisible();
-  await expect(
-    page.locator('section[aria-label="Product images"] img'),
-  ).toHaveCount(4);
+  const productImages = page.locator(
+    'section[aria-label="Product images"] img',
+  );
+  await expect(productImages.first()).toBeVisible();
+  expect(await productImages.count()).toBeGreaterThan(2);
+  const initialProductImage = await productImages.first().getAttribute("src");
+  expect(initialProductImage).not.toBeNull();
+  const secondThumbnail = page
+    .getByRole("button", {
+      name: /Select product image:/,
+    })
+    .nth(1);
+  await secondThumbnail.click();
+  await expect(secondThumbnail).toHaveAttribute("aria-pressed", "true");
+  await expect(productImages.first()).not.toHaveAttribute(
+    "src",
+    initialProductImage ?? "",
+  );
   await expect(page.getByText("Production lead time")).toBeVisible();
   await expect(page.getByText("8 days")).toBeVisible();
   await expect(page.getByText("50–99 Quantity")).toBeVisible();

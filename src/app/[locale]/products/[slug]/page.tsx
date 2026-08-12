@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FavoriteButton } from "@/components/catalogue/favorite-button";
 import { CompareButton } from "@/components/catalogue/compare-button";
 import { ProductConfigurator } from "@/components/catalogue/product-configurator";
+import { ProductMediaGallery } from "@/components/catalogue/product-media-gallery";
 import {
   getPublishedCatalogueProductBySlug,
   getPublishedCatalogueProductDetails,
@@ -87,6 +88,7 @@ export default async function ProductDetailPage({
           description: "商品说明",
           enquiry: "加入询单列表",
           gallery: "商品图片",
+          thumbnail: "选择商品图片",
           moq: "起订量",
           leadTime: "生产交期",
           price: "数量阶梯价格",
@@ -100,6 +102,7 @@ export default async function ProductDetailPage({
           description: "Product overview",
           enquiry: "Add to enquiry list",
           gallery: "Product images",
+          thumbnail: "Select product image",
           moq: "Minimum order quantity",
           leadTime: "Production lead time",
           price: "Quantity-tier pricing",
@@ -115,43 +118,12 @@ export default async function ProductDetailPage({
         <Link href={`/${locale}/products`}>{copy.back}</Link>
       </Button>
       <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)] lg:gap-16">
-        <div className="space-y-4">
-          <div className="bg-muted relative aspect-square overflow-hidden rounded-xl">
-            {product.primaryImage ? (
-              <Image
-                alt={product.primaryImage.altText ?? product.name}
-                className="object-cover"
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 55vw"
-                src={product.primaryImage.url}
-                unoptimized
-              />
-            ) : null}
-          </div>
-          {product.gallery.length > 1 ? (
-            <section aria-label={copy.gallery}>
-              <h2 className="sr-only">{copy.gallery}</h2>
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                {product.gallery.slice(1).map((image) => (
-                  <div
-                    className="bg-muted relative aspect-square overflow-hidden rounded-lg"
-                    key={image.url}
-                  >
-                    <Image
-                      alt={image.altText ?? product.name}
-                      className="object-cover"
-                      fill
-                      sizes="(max-width: 640px) 30vw, 10rem"
-                      src={image.url}
-                      unoptimized
-                    />
-                  </div>
-                ))}
-              </div>
-            </section>
-          ) : null}
-        </div>
+        <ProductMediaGallery
+          images={product.gallery}
+          label={copy.gallery}
+          productName={product.name}
+          thumbnailLabel={copy.thumbnail}
+        />
         <div className="space-y-8">
           <div className="space-y-4">
             <Badge variant="secondary">{product.productNumber}</Badge>
