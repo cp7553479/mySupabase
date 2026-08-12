@@ -22,6 +22,9 @@ test("English homepage presents the public catalogue entry points", async ({
     page.getByRole("link", { name: "Start an enquiry" }).first(),
   ).toBeVisible();
   await expect(
+    page.getByText("Find a strong starting point for your next brief."),
+  ).toBeVisible();
+  await expect(
     page.getByRole("link", { name: "hello@logopress.example" }),
   ).toBeVisible();
 });

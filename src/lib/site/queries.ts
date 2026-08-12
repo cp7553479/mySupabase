@@ -17,6 +17,14 @@ export type PublicSiteData = {
   siteName: string;
 };
 
+export type HomeSection = {
+  ctaLabel: string | null;
+  ctaPath: string | null;
+  description: string;
+  eyebrow: string | null;
+  title: string;
+};
+
 type NavigationItemRow = {
   id: string;
   menu_id: string;
@@ -139,4 +147,51 @@ export const getPublicSiteData = cache(async (locale: string) => {
     primaryNavigation: navigationByCode.get("primary") ?? [],
     siteName: settings.site_name,
   } satisfies PublicSiteData;
+});
+
+export const getPublishedHomeSections = cache(async (locale: string) => {
+  const supabase = createPublicSupabaseClient();
+  const [sectionsResult, translationsResult] = await Promise.all([
+    supabase
+      .from("home_sections")
+      .select("id, sort_order")
+      .eq("status", "published")
+      .order("sort_order"),
+    supabase
+      .from("home_section_translations")
+      .select(
+        "home_section_id, eyebrow, title, description, cta_label, cta_path",
+      )
+      .eq("locale", locale),
+  ]);
+
+  if (sectionsResult.error) {
+    throw new Error(
+      `Could not read home sections: ${sectionsResult.error.message}`,
+    );
+  }
+
+  if (translationsResult.error) {
+    throw new Error(
+      `Could not read home section translations: ${translationsResult.error.message}`,
+    );
+  }
+
+  const translationBySectionId = new Map(
+    translationsResult.data.map((translation) => [
+      translation.home_section_id,
+      {
+        ctaLabel: translation.cta_label,
+        ctaPath: translation.cta_path,
+        description: translation.description,
+        eyebrow: translation.eyebrow,
+        title: translation.title,
+      } satisfies HomeSection,
+    ]),
+  );
+
+  return sectionsResult.data.flatMap((section) => {
+    const translation = translationBySectionId.get(section.id);
+    return translation ? [translation] : [];
+  });
 });

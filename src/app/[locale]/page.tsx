@@ -12,6 +12,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getCopy, isLocale } from "@/lib/i18n";
+import { getPublishedHomeSections } from "@/lib/site/queries";
+
+export const dynamic = "force-dynamic";
 
 const proofPoints = [
   "Customisable products",
@@ -30,6 +33,7 @@ export default async function LocaleHomePage({
 
   const copy = getCopy(locale);
   const prefix = `/${locale}`;
+  const sections = await getPublishedHomeSections(locale);
 
   return (
     <>
@@ -117,6 +121,33 @@ export default async function LocaleHomePage({
               </CardHeader>
               <CardContent className="text-muted-foreground text-sm leading-6">
                 {description}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+      <section className="bg-secondary/45 border-t">
+        <div className="mx-auto grid max-w-7xl gap-5 px-5 py-16 md:grid-cols-2 lg:px-8 lg:py-24">
+          {sections.map((section) => (
+            <Card className="bg-background" key={section.title}>
+              <CardHeader className="gap-3">
+                {section.eyebrow ? (
+                  <CardDescription className="font-semibold tracking-[0.14em] uppercase">
+                    {section.eyebrow}
+                  </CardDescription>
+                ) : null}
+                <CardTitle className="text-2xl">{section.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-muted-foreground flex flex-col items-start gap-5 text-sm leading-6">
+                <p>{section.description}</p>
+                {section.ctaLabel && section.ctaPath ? (
+                  <Button asChild variant="outline">
+                    <Link href={`${prefix}${section.ctaPath}`}>
+                      {section.ctaLabel}
+                      <ArrowRightIcon data-icon="inline-end" />
+                    </Link>
+                  </Button>
+                ) : null}
               </CardContent>
             </Card>
           ))}
