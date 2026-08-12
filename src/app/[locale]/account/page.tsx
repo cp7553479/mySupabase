@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AuthForm } from "@/components/account/auth-form";
+import { DeliveryAddressForm } from "@/components/account/delivery-address-form";
 import { OrganizationForm } from "@/components/account/organization-form";
 import { ProfileForm } from "@/components/account/profile-form";
 import { SignOutButton } from "@/components/account/sign-out-button";
@@ -48,6 +49,17 @@ export default async function AccountPage({
       website: string | null;
     } | null;
   } | null;
+  const deliveryAddress = organizationDetails?.organizations
+    ? await supabase
+        .from("organization_addresses")
+        .select(
+          "contact_name, line1, line2, city, state_region, postal_code, country_code, phone",
+        )
+        .eq("organization_id", organization?.data?.organization_id ?? "")
+        .eq("address_type", "shipping")
+        .eq("is_default", true)
+        .maybeSingle()
+    : null;
 
   return (
     <section className="mx-auto max-w-md px-5 py-16 lg:py-24">
@@ -74,6 +86,21 @@ export default async function AccountPage({
             name={organizationDetails?.organizations?.name ?? ""}
             website={organizationDetails?.organizations?.website ?? ""}
           />
+          {organizationDetails?.organizations ? (
+            <DeliveryAddressForm
+              address={{
+                city: deliveryAddress?.data?.city ?? "",
+                contactName: deliveryAddress?.data?.contact_name ?? "",
+                countryCode: deliveryAddress?.data?.country_code ?? "",
+                line1: deliveryAddress?.data?.line1 ?? "",
+                line2: deliveryAddress?.data?.line2 ?? "",
+                phone: deliveryAddress?.data?.phone ?? "",
+                postalCode: deliveryAddress?.data?.postal_code ?? "",
+                stateRegion: deliveryAddress?.data?.state_region ?? "",
+              }}
+              locale={locale}
+            />
+          ) : null}
           <div className="flex flex-wrap gap-3">
             <Button asChild>
               <Link href={`/${locale}/account/enquiries`}>

@@ -400,6 +400,16 @@ test("creating a company profile requires an authenticated account", async ({
   expect(response.status()).toBe(401);
 });
 
+test("saving a company delivery address requires an authenticated account", async ({
+  page,
+}) => {
+  const response = await page.request.put("/api/account/organization-address", {
+    data: { city: "London", countryCode: "GB", line1: "1 Example Street" },
+  });
+
+  expect(response.status()).toBe(401);
+});
+
 test("saved products require an authenticated account", async ({ page }) => {
   const response = await page.request.get("/api/favorites");
   expect(response.status()).toBe(401);
