@@ -7,12 +7,8 @@ import {
   type ProductOptionValueReference,
   validateProductOptionSelections,
 } from "@/lib/catalogue/option-validation";
-import {
-  calculateProductEstimate,
-  type CatalogueUpcharge,
-  type ProductUpchargeCriterion,
-  type ProductUpchargeTier,
-} from "@/lib/catalogue/pricing";
+import { calculateProductEstimate } from "@/lib/catalogue/pricing";
+import { getVisibleProductUpcharges } from "@/lib/catalogue/server-pricing";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type AddInquiryItemRequest = {
@@ -61,28 +57,6 @@ type CreatedInquiryItem = { id: string };
 type ProductServiceRow = { service_code: string };
 
 type ServiceRow = { code: string; name: string };
-
-type UpchargeGridRow = {
-  adjustment_type: "fixed" | "per_unit" | "percentage";
-  application_level: "item" | "option" | "service";
-  id: string;
-  name: string;
-};
-
-type UpchargeCriterionRow = {
-  criterion_value: string | null;
-  operator: "equals" | "excludes" | "includes" | "not_equals";
-  option_value_id: string | null;
-  taxonomy_term_id: string | null;
-  upcharge_grid_id: string;
-};
-
-type UpchargeTierRow = {
-  amount: number;
-  maximum_quantity: number | null;
-  minimum_quantity: number;
-  upcharge_grid_id: string;
-};
 
 function isSelection(value: unknown): value is ProductOptionSelection {
   if (typeof value !== "object" || value === null) {
@@ -330,67 +304,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: upchargeGridData, error: upchargeGridError } = await supabase
-    .from("product_upcharge_grids")
-    .select("id, name, adjustment_type, application_level")
-    .eq("product_id", product.id)
-    .eq("is_active", true);
-  const upchargeGrids = (upchargeGridData ?? []) as UpchargeGridRow[];
-  const upchargeGridIds = upchargeGrids.map((grid) => grid.id);
-  const [upchargeCriteriaResult, upchargeTiersResult] = await Promise.all([
-    upchargeGridIds.length
-      ? supabase
-          .from("product_upcharge_criteria")
-          .select(
-            "upcharge_grid_id, operator, option_value_id, taxonomy_term_id, criterion_value",
-          )
-          .in("upcharge_grid_id", upchargeGridIds)
-      : Promise.resolve({ data: [], error: null }),
-    upchargeGridIds.length
-      ? supabase
-          .from("product_upcharge_tiers")
-          .select(
-            "upcharge_grid_id, minimum_quantity, maximum_quantity, amount",
-          )
-          .in("upcharge_grid_id", upchargeGridIds)
-      : Promise.resolve({ data: [], error: null }),
-  ]);
+  let upcharges;
 
-  if (
-    upchargeGridError ||
-    upchargeCriteriaResult.error ||
-    upchargeTiersResult.error
-  ) {
+  try {
+    upcharges = await getVisibleProductUpcharges(supabase, product.id);
+  } catch {
     return NextResponse.json(
       { error: "Product pricing is unavailable." },
       { status: 409 },
     );
   }
-
-  const upchargeCriteria = (upchargeCriteriaResult.data ??
-    []) as UpchargeCriterionRow[];
-  const upchargeTiers = (upchargeTiersResult.data ?? []) as UpchargeTierRow[];
-  const upcharges = upchargeGrids.map((grid): CatalogueUpcharge => ({
-    adjustmentType: grid.adjustment_type,
-    applicationLevel: grid.application_level,
-    criteria: upchargeCriteria
-      .filter((criterion) => criterion.upcharge_grid_id === grid.id)
-      .map((criterion): ProductUpchargeCriterion => ({
-        criterionValue: criterion.criterion_value,
-        operator: criterion.operator,
-        optionValueId: criterion.option_value_id,
-        taxonomyTermId: criterion.taxonomy_term_id,
-      })),
-    id: grid.id,
-    name: grid.name,
-    tiers: upchargeTiers
-      .filter((tier) => tier.upcharge_grid_id === grid.id)
-      .map((tier): ProductUpchargeTier => ({
-        amount: Number(tier.amount),
-        maximumQuantity: tier.maximum_quantity,
-        minimumQuantity: tier.minimum_quantity,
-      })),
-  }));
   const estimate = calculateProductEstimate({
     baseUnitPrice: Number(tier.unit_price),
     optionValueIds: uniqueSelections.map(

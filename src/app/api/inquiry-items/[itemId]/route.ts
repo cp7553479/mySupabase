@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { calculateProductEstimate } from "@/lib/catalogue/pricing";
+import { getVisibleProductUpcharges } from "@/lib/catalogue/server-pricing";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type UpdateInquiryItemRequest = { quantity?: unknown };
@@ -19,6 +21,10 @@ type PriceTierRow = {
   minimum_quantity: number;
   unit_price: number;
 };
+
+type SelectionRow = { option_value_id: string | null };
+
+type ServiceRequestRow = { service_code: string };
 
 export async function DELETE(
   _request: Request,
@@ -167,15 +173,58 @@ export async function PATCH(
     );
   }
 
+  const [selectionsResult, servicesResult] = await Promise.all([
+    supabase
+      .from("inquiry_item_option_selections")
+      .select("option_value_id")
+      .eq("inquiry_item_id", itemId),
+    supabase
+      .from("inquiry_item_service_requests")
+      .select("service_code")
+      .eq("inquiry_item_id", itemId),
+  ]);
+
+  if (selectionsResult.error || servicesResult.error) {
+    return NextResponse.json(
+      { error: "Could not update the enquiry item." },
+      { status: 500 },
+    );
+  }
+
+  let upcharges;
+
+  try {
+    upcharges = await getVisibleProductUpcharges(supabase, item.product_id);
+  } catch {
+    return NextResponse.json(
+      { error: "Product pricing is unavailable." },
+      { status: 409 },
+    );
+  }
+
+  const estimate = calculateProductEstimate({
+    baseUnitPrice: Number(tier.unit_price),
+    optionValueIds: ((selectionsResult.data ?? []) as SelectionRow[])
+      .map((selection) => selection.option_value_id)
+      .filter(
+        (optionValueId): optionValueId is string => optionValueId !== null,
+      ),
+    quantity,
+    serviceCodes: ((servicesResult.data ?? []) as ServiceRequestRow[]).map(
+      (service) => service.service_code,
+    ),
+    upcharges,
+  });
+
   const { error: updateError } = await supabase
     .from("inquiry_items")
     .update({
       currency_code: product.default_currency_code,
-      estimated_total_snapshot: Number(tier.unit_price) * quantity,
+      estimated_total_snapshot: estimate.total,
       price_grid_id: grid.id,
       price_tier_id: tier.id,
       quantity,
-      unit_price_snapshot: tier.unit_price,
+      unit_price_snapshot: estimate.unitPrice,
     })
     .eq("id", itemId)
     .eq("inquiry_id", item.inquiry_id);
