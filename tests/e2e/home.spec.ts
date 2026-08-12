@@ -150,6 +150,18 @@ test("published blog content is listed and rendered from Supabase", async ({
   ).toBeVisible();
 });
 
+test("published cases, FAQ and resources are available from Supabase", async ({
+  page,
+}) => {
+  await page.goto("/en/resources");
+
+  await expect(page.getByText("Event-ready brand kits")).toBeVisible();
+  await expect(page.getByText("How does quantity pricing work?")).toBeVisible();
+  await expect(
+    page.getByText("Custom product enquiry checklist"),
+  ).toBeVisible();
+});
+
 test("catalogue uses preview products, images and quantity-tier pricing", async ({
   page,
 }) => {
