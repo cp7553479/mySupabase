@@ -10,8 +10,10 @@ import {
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type AddInquiryItemRequest = {
+  customerNote?: unknown;
   productId?: unknown;
   quantity?: unknown;
+  requiredDate?: unknown;
   selections?: unknown;
   serviceCodes?: unknown;
 };
@@ -65,6 +67,12 @@ export async function POST(request: Request) {
   const payload = (await request.json()) as AddInquiryItemRequest;
   const productId =
     typeof payload.productId === "string" ? payload.productId : null;
+  const customerNote =
+    typeof payload.customerNote === "string"
+      ? payload.customerNote.trim()
+      : null;
+  const requiredDate =
+    typeof payload.requiredDate === "string" ? payload.requiredDate : null;
   const quantity =
     typeof payload.quantity === "number" &&
     Number.isSafeInteger(payload.quantity) &&
@@ -85,6 +93,16 @@ export async function POST(request: Request) {
     : [];
 
   if (!productId || !quantity || selections === null) {
+    return NextResponse.json(
+      { error: "Invalid enquiry item." },
+      { status: 400 },
+    );
+  }
+
+  if (
+    (customerNote !== null && customerNote.length > 2_000) ||
+    (requiredDate !== null && !/^\d{4}-\d{2}-\d{2}$/.test(requiredDate))
+  ) {
     return NextResponse.json(
       { error: "Invalid enquiry item." },
       { status: 400 },
@@ -262,6 +280,7 @@ export async function POST(request: Request) {
     .from("inquiry_items")
     .insert({
       currency_code: product.default_currency_code,
+      customer_note: customerNote || null,
       estimated_total_snapshot: Number(tier.unit_price) * quantity,
       inquiry_id: inquiry.id,
       price_grid_id: grid.id,
@@ -270,6 +289,7 @@ export async function POST(request: Request) {
       product_name_snapshot: product.name,
       product_number_snapshot: product.product_number,
       quantity,
+      required_date: requiredDate,
       unit_price_snapshot: tier.unit_price,
     })
     .select("id")

@@ -24,6 +24,8 @@ export function ProductConfigurator({
   services,
 }: Readonly<ProductConfiguratorProps>) {
   const [quantity, setQuantity] = useState(minimumOrderQuantity ?? 1);
+  const [customerNote, setCustomerNote] = useState("");
+  const [requiredDate, setRequiredDate] = useState("");
   const [selections, setSelections] = useState<Record<string, string[]>>({});
   const [serviceCodes, setServiceCodes] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
@@ -31,7 +33,9 @@ export function ProductConfigurator({
     locale === "zh"
       ? {
           add: "加入询单列表",
+          note: "定制说明",
           quantity: "采购数量",
+          requiredDate: "期望交期",
           required: "请完成必填配置后加入询单列表。",
           minimum: "数量未达到起订量。",
           maximum: "该配置已达到可选数量上限。",
@@ -41,7 +45,9 @@ export function ProductConfigurator({
         }
       : {
           add: "Add to enquiry list",
+          note: "Customisation notes",
           quantity: "Quantity",
+          requiredDate: "Requested delivery date",
           required:
             "Complete the required configuration before adding this item.",
           minimum: "The quantity is below the minimum order quantity.",
@@ -74,6 +80,8 @@ export function ProductConfigurator({
       body: JSON.stringify({
         productId,
         quantity,
+        customerNote,
+        requiredDate: requiredDate || null,
         serviceCodes,
         selections: Object.entries(selections).flatMap(
           ([optionGroupId, optionValueIds]) =>
@@ -149,6 +157,15 @@ export function ProductConfigurator({
           value={quantity}
         />
       </label>
+      <label className="block space-y-2">
+        <span className="text-sm font-medium">{copy.requiredDate}</span>
+        <input
+          className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
+          onChange={(event) => setRequiredDate(event.target.value)}
+          type="date"
+          value={requiredDate}
+        />
+      </label>
       {optionGroups.map((group) => (
         <fieldset className="space-y-3" key={group.id}>
           <legend className="text-sm font-medium">
@@ -209,6 +226,14 @@ export function ProductConfigurator({
           </div>
         </fieldset>
       ) : null}
+      <label className="block space-y-2">
+        <span className="text-sm font-medium">{copy.note}</span>
+        <textarea
+          className="border-input bg-background min-h-24 w-full rounded-md border px-3 py-2 text-sm"
+          onChange={(event) => setCustomerNote(event.target.value)}
+          value={customerNote}
+        />
+      </label>
       {message ? <p className="text-destructive text-sm">{message}</p> : null}
       <Button className="w-full sm:w-auto" onClick={addToEnquiry} type="button">
         {copy.add}

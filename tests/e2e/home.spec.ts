@@ -288,6 +288,10 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
   });
   await rushProduction.click();
   await expect(rushProduction).toHaveAttribute("aria-pressed", "true");
+  await page.getByLabel("Requested delivery date").fill("2026-10-01");
+  await page
+    .getByLabel("Customisation notes")
+    .fill("Include our event artwork.");
   await page.getByRole("button", { name: "Add to enquiry list" }).click();
   await expect(
     page.getByText(
