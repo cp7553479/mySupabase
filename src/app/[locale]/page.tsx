@@ -97,39 +97,52 @@ export default async function LocaleHomePage({
         </div>
       </section>
       <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-24">
-        <div className="flex max-w-2xl flex-col gap-4">
-          <p className="text-muted-foreground text-sm font-semibold tracking-[0.16em] uppercase">
-            How LogoPress works
-          </p>
-          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-            A clearer route from idea to a tailored quote.
-          </h2>
-        </div>
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
-          {[
-            [
-              "Explore",
-              "Browse categories, product details, options and quantity tiers.",
-            ],
-            [
-              "Configure",
-              "Select quantities and requirements that fit your brief.",
-            ],
-            [
-              "Enquire",
-              "Submit a structured request for a considered response.",
-            ],
-          ].map(([title, description], index) => (
-            <Card key={title}>
-              <CardHeader>
-                <CardDescription>0{index + 1}</CardDescription>
-                <CardTitle>{title}</CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground text-sm leading-6">
-                {description}
-              </CardContent>
-            </Card>
-          ))}
+        <div className="grid gap-10 lg:grid-cols-[1fr_0.9fr] lg:items-center">
+          <div>
+            <div className="flex max-w-2xl flex-col gap-4">
+              <p className="text-muted-foreground text-sm font-semibold tracking-[0.16em] uppercase">
+                How LogoPress works
+              </p>
+              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+                A clearer route from idea to a tailored quote.
+              </h2>
+            </div>
+            <div className="mt-10 grid gap-5 md:grid-cols-3">
+              {[
+                [
+                  "Explore",
+                  "Browse categories, product details, options and quantity tiers.",
+                ],
+                [
+                  "Configure",
+                  "Select quantities and requirements that fit your brief.",
+                ],
+                [
+                  "Enquire",
+                  "Submit a structured request for a considered response.",
+                ],
+              ].map(([title, description], index) => (
+                <Card key={title}>
+                  <CardHeader>
+                    <CardDescription>0{index + 1}</CardDescription>
+                    <CardTitle>{title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-muted-foreground text-sm leading-6">
+                    {description}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+          <div className="bg-muted relative aspect-[3/2] overflow-hidden rounded-3xl border">
+            <Image
+              alt="A selection of unbranded custom-product samples, materials and a design proof"
+              className="object-cover"
+              fill
+              sizes="(max-width: 1024px) 100vw, 45vw"
+              src="/brand/logopress-application-scene.png"
+            />
+          </div>
         </div>
       </section>
       <section className="bg-secondary/45 border-t">
