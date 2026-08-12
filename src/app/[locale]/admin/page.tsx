@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { AdminShell } from "@/components/admin/admin-shell";
+import { getAdminOverview } from "@/lib/admin/overview";
 import { getCurrentUserPermissionCodes } from "@/lib/auth/permissions";
 import { isLocale } from "@/lib/i18n";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -23,18 +24,48 @@ export default async function AdminPage({
   if (!permissionCodes.has("admin.access")) {
     redirect(`/${locale}/account`);
   }
+  const overview = await getAdminOverview(permissionCodes);
+
+  const copy =
+    locale === "zh"
+      ? {
+          content: "已发布内容",
+          enquiries: "待处理询单",
+          product: "已发布商品",
+          restricted: "当前角色无此模块权限",
+          title: "业务概览",
+        }
+      : {
+          content: "Published content",
+          enquiries: "Submitted enquiries",
+          product: "Published products",
+          restricted: "This role does not have access to this area.",
+          title: "Business overview",
+        };
 
   return (
     <AdminShell locale={locale}>
-      <div className="rounded-xl border p-6">
-        <h2 className="text-xl font-semibold">
-          {locale === "zh" ? "管理入口已准备就绪" : "Administration is ready"}
-        </h2>
-        <p className="text-muted-foreground mt-3 leading-7">
-          {locale === "zh"
-            ? "商品、内容、询单、会员和价格管理页面会在对应功能完成后接入此处。"
-            : "Catalogue, content, enquiry, member and pricing management will connect here as each capability is completed."}
-        </p>
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-xl font-semibold">{copy.title}</h2>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[
+            { label: copy.product, value: overview.publishedProducts },
+            { label: copy.content, value: overview.publishedContent },
+            { label: copy.enquiries, value: overview.submittedEnquiries },
+          ].map((item) => (
+            <section className="rounded-xl border p-5" key={item.label}>
+              <p className="text-muted-foreground text-sm">{item.label}</p>
+              <p className="mt-3 text-3xl font-semibold">{item.value ?? "—"}</p>
+              {item.value === null ? (
+                <p className="text-muted-foreground mt-3 text-xs leading-5">
+                  {copy.restricted}
+                </p>
+              ) : null}
+            </section>
+          ))}
+        </div>
       </div>
     </AdminShell>
   );
