@@ -13,6 +13,7 @@ type AddInquiryItemRequest = {
   productId?: unknown;
   quantity?: unknown;
   selections?: unknown;
+  serviceCodes?: unknown;
 };
 
 type ProductRow = {
@@ -43,6 +44,10 @@ type OptionValueRow = { id: string; label: string; option_group_id: string };
 
 type InquiryRow = { id: string; inquiry_number: string };
 
+type ProductServiceRow = { service_code: string };
+
+type ServiceRow = { code: string; name: string };
+
 function isSelection(value: unknown): value is ProductOptionSelection {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -69,6 +74,15 @@ export async function POST(request: Request) {
   const selections = Array.isArray(payload.selections)
     ? payload.selections.filter(isSelection)
     : null;
+  const serviceCodes = Array.isArray(payload.serviceCodes)
+    ? [
+        ...new Set(
+          payload.serviceCodes.filter(
+            (code): code is string => typeof code === "string",
+          ),
+        ),
+      ]
+    : [];
 
   if (!productId || !quantity || selections === null) {
     return NextResponse.json(
@@ -286,6 +300,69 @@ export async function POST(request: Request) {
       await supabase.from("inquiry_items").delete().eq("id", itemData.id);
       return NextResponse.json(
         { error: "Could not save the product configuration." },
+        { status: 500 },
+      );
+    }
+  }
+
+  if (serviceCodes.length > 0) {
+    const [productServicesResult, serviceDefinitionsResult] = await Promise.all(
+      [
+        supabase
+          .from("product_services")
+          .select("service_code")
+          .eq("product_id", product.id)
+          .eq("is_available", true)
+          .in("service_code", serviceCodes),
+        supabase
+          .from("services")
+          .select("code, name")
+          .eq("is_active", true)
+          .in("code", serviceCodes),
+      ],
+    );
+    const availableServiceCodes = new Set(
+      ((productServicesResult.data ?? []) as ProductServiceRow[]).map(
+        (service) => service.service_code,
+      ),
+    );
+    const serviceNamesByCode = new Map(
+      ((serviceDefinitionsResult.data ?? []) as ServiceRow[]).map((service) => [
+        service.code,
+        service.name,
+      ]),
+    );
+
+    if (
+      productServicesResult.error ||
+      serviceDefinitionsResult.error ||
+      serviceCodes.some(
+        (code) =>
+          !availableServiceCodes.has(code) || !serviceNamesByCode.has(code),
+      )
+    ) {
+      await supabase.from("inquiry_items").delete().eq("id", itemData.id);
+      return NextResponse.json(
+        { error: "One or more requested services are unavailable." },
+        { status: 409 },
+      );
+    }
+
+    const { error: serviceRequestError } = await supabase
+      .from("inquiry_item_service_requests")
+      .insert(
+        serviceCodes.map((serviceCode) => ({
+          inquiry_item_id: itemData.id,
+          service_code: serviceCode,
+          service_name_snapshot:
+            serviceNamesByCode.get(serviceCode) ?? serviceCode,
+        })),
+      );
+
+    if (serviceRequestError) {
+      await supabase.from("inquiry_items").delete().eq("id", itemData.id);
+      return NextResponse.json(
+        { error: "Could not save the requested services." },
         { status: 500 },
       );
     }

@@ -280,7 +280,14 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
   await expect(page.getByText("Specifications")).toBeVisible();
   await expect(page.getByText("Length")).toBeVisible();
   await expect(page.getByText("Available services")).toBeVisible();
-  await expect(page.getByText("Rush Production")).toBeVisible();
+  await expect(
+    page.getByText("Rush Production", { exact: true }),
+  ).toBeVisible();
+  const rushProduction = page.getByRole("button", {
+    name: "Rush Production (5 days)",
+  });
+  await rushProduction.click();
+  await expect(rushProduction).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Add to enquiry list" }).click();
   await expect(
     page.getByText(

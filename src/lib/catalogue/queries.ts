@@ -35,8 +35,15 @@ export type CatalogueProductDetail = CatalogueProduct & {
   gallery: CatalogueMedia[];
   optionGroups: CatalogueOptionGroup[];
   priceTiers: CataloguePriceTier[];
-  services: string[];
+  services: CatalogueService[];
   specifications: CatalogueSpecification[];
+};
+
+export type CatalogueService = {
+  code: string;
+  description: string | null;
+  leadTimeDays: number | null;
+  name: string;
 };
 
 export type CatalogueOptionGroup = {
@@ -140,12 +147,15 @@ type ProductSpecificationRow = {
 };
 
 type ProductServiceRow = {
+  description: string | null;
+  lead_time_days: number | null;
   product_id: string;
   service_code: string;
 };
 
 type ServiceRow = {
   code: string;
+  description: string | null;
   name: string;
 };
 
@@ -340,7 +350,7 @@ async function getPublishedProductRows(locale: string) {
       .order("sort_order"),
     supabase
       .from("product_services")
-      .select("product_id, service_code")
+      .select("product_id, service_code, lead_time_days, description")
       .in("product_id", productIds)
       .eq("is_available", true),
     supabase.from("taxonomies").select("id, code").eq("is_active", true),
@@ -408,7 +418,10 @@ async function getPublishedProductRows(locale: string) {
           .select("id, taxonomy_id, name")
           .in("id", taxonomyTermIds)
       : Promise.resolve({ data: [], error: null }),
-    supabase.from("services").select("code, name").eq("is_active", true),
+    supabase
+      .from("services")
+      .select("code, name, description")
+      .eq("is_active", true),
     optionGroupIds.length
       ? supabase
           .from("product_option_values")
@@ -465,8 +478,8 @@ function toCatalogueProducts(
   const categoryTaxonomyId = rows.taxonomies.find(
     (taxonomy) => taxonomy.code === "category",
   )?.id;
-  const serviceNamesByCode = new Map(
-    rows.serviceDefinitions.map((service) => [service.code, service.name]),
+  const serviceDefinitionsByCode = new Map(
+    rows.serviceDefinitions.map((service) => [service.code, service]),
   );
 
   return rows.products.map((product) => {
@@ -503,8 +516,19 @@ function toCatalogueProducts(
       }));
     const services = rows.services
       .filter((service) => service.product_id === product.id)
-      .map((service) => serviceNamesByCode.get(service.service_code))
-      .filter((service): service is string => service !== undefined);
+      .map((service) => {
+        const definition = serviceDefinitionsByCode.get(service.service_code);
+
+        return definition
+          ? {
+              code: definition.code,
+              description: service.description ?? definition.description,
+              leadTimeDays: service.lead_time_days,
+              name: definition.name,
+            }
+          : null;
+      })
+      .filter((service): service is CatalogueService => service !== null);
     const optionGroups = rows.optionGroups
       .filter((group) => group.product_id === product.id)
       .map((group) => ({

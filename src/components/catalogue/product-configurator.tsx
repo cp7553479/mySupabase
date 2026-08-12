@@ -3,13 +3,17 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import type { CatalogueOptionGroup } from "@/lib/catalogue/queries";
+import type {
+  CatalogueOptionGroup,
+  CatalogueService,
+} from "@/lib/catalogue/queries";
 
 type ProductConfiguratorProps = {
   locale: string;
   minimumOrderQuantity: number | null;
   optionGroups: CatalogueOptionGroup[];
   productId: string;
+  services: CatalogueService[];
 };
 
 export function ProductConfigurator({
@@ -17,9 +21,11 @@ export function ProductConfigurator({
   minimumOrderQuantity,
   optionGroups,
   productId,
+  services,
 }: Readonly<ProductConfiguratorProps>) {
   const [quantity, setQuantity] = useState(minimumOrderQuantity ?? 1);
   const [selections, setSelections] = useState<Record<string, string[]>>({});
+  const [serviceCodes, setServiceCodes] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const copy =
     locale === "zh"
@@ -29,6 +35,7 @@ export function ProductConfigurator({
           required: "请完成必填配置后加入询单列表。",
           minimum: "数量未达到起订量。",
           maximum: "该配置已达到可选数量上限。",
+          services: "附加服务",
           signIn: "请先登录，再将商品加入询单列表。",
           success: "商品已加入草稿询单。",
         }
@@ -39,6 +46,7 @@ export function ProductConfigurator({
             "Complete the required configuration before adding this item.",
           minimum: "The quantity is below the minimum order quantity.",
           maximum: "This configuration has reached its selection limit.",
+          services: "Additional services",
           signIn: "Sign in before adding this product to your enquiry list.",
           success: "Product added to your draft enquiry.",
         };
@@ -66,6 +74,7 @@ export function ProductConfigurator({
       body: JSON.stringify({
         productId,
         quantity,
+        serviceCodes,
         selections: Object.entries(selections).flatMap(
           ([optionGroupId, optionValueIds]) =>
             optionValueIds.map((optionValueId) => ({
@@ -120,6 +129,14 @@ export function ProductConfigurator({
     });
   }
 
+  function toggleService(serviceCode: string) {
+    setServiceCodes((current) =>
+      current.includes(serviceCode)
+        ? current.filter((code) => code !== serviceCode)
+        : [...current, serviceCode],
+    );
+  }
+
   return (
     <div className="space-y-6 rounded-xl border p-5">
       <label className="block space-y-2">
@@ -169,6 +186,29 @@ export function ProductConfigurator({
           </div>
         </fieldset>
       ))}
+      {services.length > 0 ? (
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-medium">{copy.services}</legend>
+          <div className="flex flex-wrap gap-2">
+            {services.map((service) => (
+              <Button
+                aria-pressed={serviceCodes.includes(service.code)}
+                key={service.code}
+                onClick={() => toggleService(service.code)}
+                type="button"
+                variant={
+                  serviceCodes.includes(service.code) ? "default" : "outline"
+                }
+              >
+                {service.name}
+                {service.leadTimeDays !== null
+                  ? ` (${service.leadTimeDays} ${locale === "zh" ? "天" : "days"})`
+                  : ""}
+              </Button>
+            ))}
+          </div>
+        </fieldset>
+      ) : null}
       {message ? <p className="text-destructive text-sm">{message}</p> : null}
       <Button className="w-full sm:w-auto" onClick={addToEnquiry} type="button">
         {copy.add}

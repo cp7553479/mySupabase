@@ -191,6 +191,7 @@ export default async function ProductDetailPage({
             minimumOrderQuantity={product.minimumOrderQuantity}
             optionGroups={product.optionGroups}
             productId={product.id}
+            services={product.services}
           />
           <FavoriteButton locale={locale} productId={product.id} />
           <CompareButton locale={locale} productId={product.id} />
@@ -228,8 +229,8 @@ export default async function ProductDetailPage({
           <h2 className="text-2xl font-semibold">{copy.services}</h2>
           <div className="flex flex-wrap gap-2">
             {product.services.map((service) => (
-              <Badge key={service} variant="secondary">
-                {service}
+              <Badge key={service.code} variant="secondary">
+                {service.name}
               </Badge>
             ))}
           </div>
