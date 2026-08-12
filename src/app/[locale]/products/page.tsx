@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { ProductCard } from "@/components/catalogue/product-card";
+import { CatalogueBrowser } from "@/components/catalogue/catalogue-browser";
 import { getPublishedCatalogueProducts } from "@/lib/catalogue/queries";
 import { isLocale } from "@/lib/i18n";
 
@@ -43,23 +43,7 @@ export default async function ProductsPage({
           {copy.summary}
         </p>
       </div>
-      {products.length > 0 ? (
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          {products.map((product) => (
-            <ProductCard
-              key={product.productNumber}
-              locale={locale}
-              product={product}
-            />
-          ))}
-        </div>
-      ) : (
-        <p className="text-muted-foreground mt-12">
-          {locale === "zh"
-            ? "暂时没有可展示的商品。"
-            : "No products are available yet."}
-        </p>
-      )}
+      <CatalogueBrowser locale={locale} products={products} />
     </section>
   );
 }

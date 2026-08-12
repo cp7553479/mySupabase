@@ -167,6 +167,22 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
     }),
   ).toBeVisible();
 
+  await page.getByRole("button", { name: "Shopping Bags" }).click();
+  await expect(page.getByText("Reinforced Handle Bag")).toBeVisible();
+  await expect(
+    page.getByText("Multi Band Wireless Vintage Radio with Flashlight"),
+  ).not.toBeVisible();
+  await page.getByRole("button", { name: "All products" }).click();
+  await page
+    .getByRole("searchbox", { name: "Search products or product numbers" })
+    .fill("LP0690");
+  await expect(
+    page.getByText("Multifunctional Mini USB Fan with Light"),
+  ).toBeVisible();
+  await page
+    .getByRole("searchbox", { name: "Search products or product numbers" })
+    .fill("");
+
   await page
     .locator('[data-slot="card"]')
     .filter({ hasText: "Multi Band Wireless Vintage Radio with Flashlight" })
