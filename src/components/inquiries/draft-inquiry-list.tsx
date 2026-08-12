@@ -4,6 +4,7 @@ import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { InquiryAttachmentUpload } from "@/components/inquiries/inquiry-attachment-upload";
 import type { DraftInquiry } from "@/lib/inquiries/queries";
 
 type DraftInquiryListProps = { inquiry: DraftInquiry | null; locale: string };
@@ -46,6 +47,7 @@ export function DraftInquiryList({
           contactEmail: "联系邮箱",
           contactPhone: "联系电话",
           message: "采购说明",
+          attachments: "询单附件",
         }
       : {
           empty:
@@ -63,6 +65,7 @@ export function DraftInquiryList({
           contactEmail: "Contact email",
           contactPhone: "Contact phone",
           message: "Procurement notes",
+          attachments: "Enquiry attachments",
         };
 
   async function removeItem(itemId: string) {
@@ -172,6 +175,17 @@ export function DraftInquiryList({
           {copy.estimated}: {formatPrice(estimatedTotal, currencyCode, locale)}
         </p>
       ) : null}
+      <section className="space-y-3 rounded-xl border p-5">
+        <h2 className="text-lg font-semibold">{copy.attachments}</h2>
+        <InquiryAttachmentUpload inquiryId={inquiry.id} locale={locale} />
+        {inquiry.attachments.length ? (
+          <ul className="text-muted-foreground list-inside list-disc text-sm">
+            {inquiry.attachments.map((attachment) => (
+              <li key={attachment.id}>{attachment.filename}</li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
       <form
         className="space-y-4 rounded-xl border p-5"
         onSubmit={submitInquiry}

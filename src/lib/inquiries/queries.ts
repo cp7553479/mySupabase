@@ -14,10 +14,13 @@ export type DraftInquiryItem = {
 };
 
 export type DraftInquiry = {
+  attachments: DraftInquiryAttachment[];
   id: string;
   items: DraftInquiryItem[];
   number: string;
 };
+
+export type DraftInquiryAttachment = { filename: string; id: string };
 
 export type SubmittedInquiry = {
   number: string;
@@ -41,6 +44,8 @@ type SelectionRow = {
   inquiry_item_id: string;
   option_value_snapshot: string | null;
 };
+
+type AttachmentRow = { filename: string; id: string };
 
 export async function getCurrentDraftInquiry(): Promise<DraftInquiry | null> {
   const supabase = await createServerSupabaseClient();
@@ -100,7 +105,20 @@ export async function getCurrentDraftInquiry(): Promise<DraftInquiry | null> {
     );
   }
 
+  const { data: attachmentsData, error: attachmentsError } = await supabase
+    .from("inquiry_attachments")
+    .select("id, filename")
+    .eq("inquiry_id", inquiry.id)
+    .order("created_at");
+
+  if (attachmentsError) {
+    throw new Error(
+      `Could not read enquiry attachments: ${attachmentsError.message}`,
+    );
+  }
+
   return {
+    attachments: attachmentsData as AttachmentRow[],
     id: inquiry.id,
     items: items.map((item) => ({
       currencyCode: item.currency_code,

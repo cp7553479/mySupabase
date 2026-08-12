@@ -360,6 +360,22 @@ test("submitted enquiry history remains protected", async ({ page }) => {
   await expect(page).toHaveURL(/\/en\/account$/);
 });
 
+test("attaching files to an enquiry requires an authenticated account", async ({
+  page,
+}) => {
+  const response = await page.request.post(
+    "/api/inquiries/00000000-0000-0000-0000-000000000000/attachments",
+    {
+      data: {
+        byteSize: 10,
+        filename: "reference.pdf",
+        objectPath: "x/reference.pdf",
+      },
+    },
+  );
+  expect(response.status()).toBe(401);
+});
+
 test("updating a profile requires an authenticated account", async ({
   page,
 }) => {
