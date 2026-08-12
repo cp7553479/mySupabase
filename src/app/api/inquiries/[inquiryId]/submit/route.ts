@@ -6,11 +6,30 @@ type SubmitInquiryRequest = {
   contactEmail?: unknown;
   contactName?: unknown;
   contactPhone?: unknown;
+  deliveryCountryCode?: unknown;
+  intendedUse?: unknown;
   message?: unknown;
+  requiredDate?: unknown;
 };
 
 function text(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function date(value: unknown): string | null {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return null;
+  }
+
+  return Number.isNaN(Date.parse(`${value}T00:00:00.000Z`)) ? null : value;
+}
+
+function countryCode(value: unknown): string | null {
+  if (typeof value !== "string" || !/^[A-Za-z]{2}$/.test(value)) {
+    return null;
+  }
+
+  return value.toUpperCase();
 }
 
 export async function POST(
@@ -22,7 +41,10 @@ export async function POST(
   const contactName = text(payload.contactName);
   const contactEmail = text(payload.contactEmail);
   const contactPhone = text(payload.contactPhone);
+  const deliveryCountryCode = countryCode(payload.deliveryCountryCode);
+  const intendedUse = text(payload.intendedUse);
   const message = text(payload.message);
+  const requiredDate = date(payload.requiredDate);
 
   if (!contactName || !contactEmail) {
     return NextResponse.json(
@@ -61,6 +83,9 @@ export async function POST(
       contact_name: contactName,
       contact_phone: contactPhone,
       customer_message: message,
+      delivery_country_code: deliveryCountryCode,
+      intended_use: intendedUse,
+      required_date: requiredDate,
       status: "submitted",
       submitted_at: new Date().toISOString(),
     })

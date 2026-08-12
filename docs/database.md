@@ -26,7 +26,7 @@ LogoPress 使用已链接的 Supabase 项目 `nizvigrplhvbvafwvcmy`。`SPEC.md` 
 - 企业价格与审核：`organization_price_books`、`organization_review_events`；
 - 商品目录：`products`、`taxonomy_terms`、`product_specifications`、`media_assets`、`product_compliance_records`、`product_option_groups`、`product_option_values`、`product_variants`、`product_favorites`；
 - 价格：`price_books`、`product_price_grids`、`product_price_tiers`、`product_upcharge_grids`、`product_upcharge_tiers`；
-- 询单与报价：`inquiries`、`inquiry_items`、`inquiry_attachments`、`inquiry_communications`、`quotes`、`quote_versions`、`quote_items`、`quote_responses`；
+- 询单与报价：`inquiries`、`inquiry_items`、`inquiry_attachments`、`inquiry_communications`、`quotes`、`quote_versions`、`quote_items`、`quote_responses`；询单保留采购用途、期望交付日期和收货国家/地区；
 - 内容：`content_entries` 及其翻译、媒体、主题分类和商品关联表；主题用于前台文章浏览，商品关联用于文章中的目录入口。
 - 站点配置：`site_settings`、`site_locales`、`navigation_menus`、`navigation_items`、`navigation_item_translations`。
 

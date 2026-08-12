@@ -46,7 +46,10 @@ export function DraftInquiryList({
           contactName: "联系人姓名",
           contactEmail: "联系邮箱",
           contactPhone: "联系电话",
+          deliveryCountry: "收货国家或地区（ISO 两位代码）",
+          intendedUse: "使用场景",
           message: "采购说明",
+          requiredDate: "期望交付日期",
           attachments: "询单附件",
         }
       : {
@@ -64,7 +67,10 @@ export function DraftInquiryList({
           contactName: "Contact name",
           contactEmail: "Contact email",
           contactPhone: "Contact phone",
+          deliveryCountry: "Delivery country or region (2-letter ISO code)",
+          intendedUse: "Intended use",
           message: "Procurement notes",
+          requiredDate: "Required delivery date",
           attachments: "Enquiry attachments",
         };
 
@@ -94,7 +100,10 @@ export function DraftInquiryList({
         contactEmail: form.get("contactEmail"),
         contactName: form.get("contactName"),
         contactPhone: form.get("contactPhone"),
+        deliveryCountryCode: form.get("deliveryCountryCode"),
+        intendedUse: form.get("intendedUse"),
         message: form.get("message"),
+        requiredDate: form.get("requiredDate"),
       }),
       headers: { "Content-Type": "application/json" },
       method: "POST",
@@ -214,6 +223,33 @@ export function DraftInquiryList({
           <input
             className="border-input h-9 w-full rounded-md border px-3"
             name="contactPhone"
+          />
+        </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="space-y-2 text-sm font-medium">
+            {copy.requiredDate}
+            <input
+              className="border-input h-9 w-full rounded-md border px-3"
+              name="requiredDate"
+              type="date"
+            />
+          </label>
+          <label className="space-y-2 text-sm font-medium">
+            {copy.deliveryCountry}
+            <input
+              className="border-input h-9 w-full rounded-md border px-3"
+              maxLength={2}
+              name="deliveryCountryCode"
+              pattern="[A-Za-z]{2}"
+              placeholder={locale === "zh" ? "例如 GB" : "e.g. GB"}
+            />
+          </label>
+        </div>
+        <label className="block space-y-2 text-sm font-medium">
+          {copy.intendedUse}
+          <input
+            className="border-input h-9 w-full rounded-md border px-3"
+            name="intendedUse"
           />
         </label>
         <label className="block space-y-2 text-sm font-medium">
