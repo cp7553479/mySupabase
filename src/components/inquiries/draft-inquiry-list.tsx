@@ -27,6 +27,7 @@ export function DraftInquiryList({
   locale,
 }: Readonly<DraftInquiryListProps>) {
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
+  const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
@@ -39,6 +40,8 @@ export function DraftInquiryList({
           itemCount: "项商品",
           remove: "移除",
           removeError: "暂时无法移除此商品，请稍后重试。",
+          update: "更新数量",
+          updateError: "暂时无法更新数量，请检查起订量和价格档。",
           selectedOptions: "已选配置",
           submit: "提交询单",
           submitError: "暂时无法提交询单，请检查信息后重试。",
@@ -64,6 +67,9 @@ export function DraftInquiryList({
           itemCount: "items",
           remove: "Remove",
           removeError: "This product could not be removed. Please try again.",
+          update: "Update quantity",
+          updateError:
+            "This quantity could not be updated. Check the minimum order quantity and price tier.",
           selectedOptions: "Selected options",
           submit: "Submit enquiry",
           submitError:
@@ -139,6 +145,30 @@ export function DraftInquiryList({
     }
   }
 
+  async function updateItemQuantity(itemId: string, form: FormData) {
+    const quantity = Number(form.get("quantity"));
+    if (!Number.isSafeInteger(quantity) || quantity <= 0) {
+      setMessage(copy.updateError);
+      return;
+    }
+
+    setUpdatingItemId(itemId);
+    setMessage(null);
+    const response = await fetch(`/api/inquiry-items/${itemId}`, {
+      body: JSON.stringify({ quantity }),
+      headers: { "Content-Type": "application/json" },
+      method: "PATCH",
+    });
+    setUpdatingItemId(null);
+
+    if (!response.ok) {
+      setMessage(copy.updateError);
+      return;
+    }
+
+    router.refresh();
+  }
+
   if (!inquiry || inquiry.items.length === 0) {
     return <p className="text-muted-foreground mt-8 leading-7">{copy.empty}</p>;
   }
@@ -176,14 +206,40 @@ export function DraftInquiryList({
                 {copy.remove}
               </Button>
             </div>
-            <div className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-2 text-sm">
-              <span>{item.quantity.toLocaleString()}</span>
+            <form
+              className="text-muted-foreground flex flex-wrap items-center gap-x-5 gap-y-2 text-sm"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void updateItemQuantity(
+                  item.id,
+                  new FormData(event.currentTarget),
+                );
+              }}
+            >
+              <label className="flex items-center gap-2">
+                <span className="sr-only">{copy.update}</span>
+                <input
+                  className="border-input bg-background h-8 w-28 rounded-md border px-2"
+                  defaultValue={item.quantity}
+                  min={1}
+                  name="quantity"
+                  type="number"
+                />
+              </label>
               {item.unitPrice !== null ? (
                 <span>
                   {formatPrice(item.unitPrice, item.currencyCode, locale)}
                 </span>
               ) : null}
-            </div>
+              <Button
+                disabled={updatingItemId === item.id}
+                size="sm"
+                type="submit"
+                variant="outline"
+              >
+                {copy.update}
+              </Button>
+            </form>
             {item.options.length > 0 ? (
               <p className="text-muted-foreground text-sm">
                 {copy.selectedOptions}: {item.options.join(" · ")}

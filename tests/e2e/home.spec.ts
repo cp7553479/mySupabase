@@ -364,7 +364,7 @@ test("the enquiry API requires an authenticated account", async ({ page }) => {
   });
 });
 
-test("draft enquiry items cannot be removed without an authenticated account", async ({
+test("draft enquiry items cannot be changed without an authenticated account", async ({
   page,
 }) => {
   const response = await page.request.delete(
@@ -373,6 +373,16 @@ test("draft enquiry items cannot be removed without an authenticated account", a
 
   expect(response.status()).toBe(401);
   await expect(response.json()).resolves.toEqual({
+    error: "Authentication required.",
+  });
+
+  const updateResponse = await page.request.patch(
+    "/api/inquiry-items/00000000-0000-0000-0000-000000000000",
+    { data: { quantity: 100 } },
+  );
+
+  expect(updateResponse.status()).toBe(401);
+  await expect(updateResponse.json()).resolves.toEqual({
     error: "Authentication required.",
   });
 });
