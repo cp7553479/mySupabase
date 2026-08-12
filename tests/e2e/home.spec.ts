@@ -216,3 +216,19 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
     }),
   ).toBeVisible();
 });
+
+test("account entry provides sign-in and registration controls", async ({
+  page,
+}) => {
+  await page.goto("/en/account");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Account and enquiries" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+  await page
+    .getByRole("button", { name: "New here? Create an account" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Create account" }),
+  ).toBeVisible();
+});
