@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { isLocale, locales } from "@/lib/i18n";
+import { getPublicSiteData } from "@/lib/site/queries";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -22,11 +23,17 @@ export default async function PublicLocaleLayout({
     notFound();
   }
 
+  const site = await getPublicSiteData(requestedLocale);
+
   return (
     <div className="flex min-h-svh flex-col">
-      <SiteHeader locale={requestedLocale} />
+      <SiteHeader
+        locale={requestedLocale}
+        navigation={site.primaryNavigation}
+        siteName={site.siteName}
+      />
       <main className="flex-1">{children}</main>
-      <SiteFooter locale={requestedLocale} />
+      <SiteFooter locale={requestedLocale} site={site} />
     </div>
   );
 }

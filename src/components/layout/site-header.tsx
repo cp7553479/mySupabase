@@ -5,8 +5,23 @@ import { MenuIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { getCopy, type Locale } from "@/lib/i18n";
+import type { SiteNavigationItem } from "@/lib/site/queries";
 
-export function SiteHeader({ locale }: { locale: Locale }) {
+function toLocalizedPath(locale: Locale, item: SiteNavigationItem) {
+  return item.targetType === "path"
+    ? `/${locale}${item.targetPath}`
+    : item.targetPath;
+}
+
+export function SiteHeader({
+  locale,
+  navigation,
+  siteName,
+}: {
+  locale: Locale;
+  navigation: SiteNavigationItem[];
+  siteName: string;
+}) {
   const copy = getCopy(locale);
   const prefix = `/${locale}`;
 
@@ -15,7 +30,7 @@ export function SiteHeader({ locale }: { locale: Locale }) {
       <div className="mx-auto flex min-h-18 max-w-7xl items-center justify-between gap-4 px-5 lg:px-8">
         <Link className="shrink-0" href={prefix}>
           <Image
-            alt={copy.logoAlt}
+            alt={siteName}
             className="h-8 w-auto"
             height={55}
             priority
@@ -24,30 +39,16 @@ export function SiteHeader({ locale }: { locale: Locale }) {
           />
         </Link>
         <nav className="hidden items-center gap-6 lg:flex" aria-label="Primary">
-          <Link
-            className="hover:text-muted-foreground text-sm font-medium transition-colors"
-            href={`${prefix}/products`}
-          >
-            {copy.products}
-          </Link>
-          <Link
-            className="hover:text-muted-foreground text-sm font-medium transition-colors"
-            href={`${prefix}/services`}
-          >
-            {copy.resources}
-          </Link>
-          <Link
-            className="hover:text-muted-foreground text-sm font-medium transition-colors"
-            href={`${prefix}/insights`}
-          >
-            {copy.blog}
-          </Link>
-          <Link
-            className="hover:text-muted-foreground text-sm font-medium transition-colors"
-            href={`${prefix}/about`}
-          >
-            {copy.about}
-          </Link>
+          {navigation.map((item) => (
+            <Link
+              className="hover:text-muted-foreground text-sm font-medium transition-colors"
+              href={toLocalizedPath(locale, item)}
+              key={item.label}
+              target={item.openInNewTab ? "_blank" : undefined}
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
         <div className="hidden items-center gap-2 lg:flex">
           <LanguageSwitcher locale={locale} />
@@ -67,30 +68,16 @@ export function SiteHeader({ locale }: { locale: Locale }) {
             className="bg-popover absolute top-11 right-0 z-20 flex w-64 flex-col gap-1 rounded-xl border p-3 shadow-lg"
             aria-label="Mobile navigation"
           >
-            <Link
-              className="hover:bg-muted rounded-md px-3 py-2 text-sm font-medium"
-              href={`${prefix}/products`}
-            >
-              {copy.products}
-            </Link>
-            <Link
-              className="hover:bg-muted rounded-md px-3 py-2 text-sm font-medium"
-              href={`${prefix}/services`}
-            >
-              {copy.resources}
-            </Link>
-            <Link
-              className="hover:bg-muted rounded-md px-3 py-2 text-sm font-medium"
-              href={`${prefix}/insights`}
-            >
-              {copy.blog}
-            </Link>
-            <Link
-              className="hover:bg-muted rounded-md px-3 py-2 text-sm font-medium"
-              href={`${prefix}/about`}
-            >
-              {copy.about}
-            </Link>
+            {navigation.map((item) => (
+              <Link
+                className="hover:bg-muted rounded-md px-3 py-2 text-sm font-medium"
+                href={toLocalizedPath(locale, item)}
+                key={item.label}
+                target={item.openInNewTab ? "_blank" : undefined}
+              >
+                {item.label}
+              </Link>
+            ))}
             <div className="my-1 border-t" />
             <LanguageSwitcher locale={locale} />
             <Button asChild className="mt-2" size="sm">
