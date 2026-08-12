@@ -87,3 +87,29 @@ test("company, contact and legal pages provide a consistent enquiry route", asyn
     page.getByRole("link", { name: "hello@logopress.example" }).first(),
   ).toBeVisible();
 });
+
+test("public pages expose language-aware SEO metadata and crawler endpoints", async ({
+  page,
+}) => {
+  await page.goto("/zh");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    "/zh",
+  );
+  await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute(
+    "content",
+    "zh",
+  );
+
+  const robots = await page.request.get("/robots.txt");
+  await expect(robots).toBeOK();
+  await expect(await robots.text()).toContain(
+    "Sitemap: https://logopress.example/sitemap.xml",
+  );
+
+  const sitemap = await page.request.get("/sitemap.xml");
+  await expect(sitemap).toBeOK();
+  await expect(await sitemap.text()).toContain(
+    "https://logopress.example/zh/services",
+  );
+});

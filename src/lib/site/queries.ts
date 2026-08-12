@@ -11,10 +11,13 @@ export type SiteNavigationItem = {
 
 export type PublicSiteData = {
   contactEmail: string | null;
+  defaultSeoDescription: string | null;
+  defaultSeoTitle: string | null;
   footerCatalogue: SiteNavigationItem[];
   footerCompany: SiteNavigationItem[];
   primaryNavigation: SiteNavigationItem[];
   siteName: string;
+  websiteUrl: string | null;
 };
 
 export type HomeSection = {
@@ -58,7 +61,9 @@ export const getPublicSiteData = cache(async (locale: string) => {
   const [settingsResult, menusResult] = await Promise.all([
     supabase
       .from("site_settings")
-      .select("site_name, contact_email")
+      .select(
+        "site_name, contact_email, website_url, default_seo_title, default_seo_description",
+      )
       .eq("id", true)
       .single(),
     supabase
@@ -142,10 +147,13 @@ export const getPublicSiteData = cache(async (locale: string) => {
 
   return {
     contactEmail: settings.contact_email,
+    defaultSeoDescription: settings.default_seo_description,
+    defaultSeoTitle: settings.default_seo_title,
     footerCatalogue: navigationByCode.get("footer_catalogue") ?? [],
     footerCompany: navigationByCode.get("footer_company") ?? [],
     primaryNavigation: navigationByCode.get("primary") ?? [],
     siteName: settings.site_name,
+    websiteUrl: settings.website_url,
   } satisfies PublicSiteData;
 });
 
