@@ -20,11 +20,40 @@ function formatPrice(amount: number, currencyCode: string, locale: string) {
   }).format(amount);
 }
 
+function formatLeadTime(
+  minimumDays: number | null,
+  maximumDays: number | null,
+  locale: string,
+) {
+  if (minimumDays === null && maximumDays === null) {
+    return null;
+  }
+
+  const days = locale === "zh" ? "天" : "days";
+  if (minimumDays !== null && maximumDays !== null) {
+    return minimumDays === maximumDays
+      ? `${minimumDays} ${days}`
+      : `${minimumDays}–${maximumDays} ${days}`;
+  }
+
+  return `${minimumDays ?? maximumDays}+ ${days}`;
+}
+
 export function ProductCard({ locale, product }: Readonly<ProductCardProps>) {
   const labels =
     locale === "zh"
-      ? { from: "起", details: "查看商品", moq: "起订量" }
-      : { from: "from", details: "View product", moq: "MOQ" };
+      ? { from: "起", details: "查看商品", leadTime: "生产交期", moq: "起订量" }
+      : {
+          from: "from",
+          details: "View product",
+          leadTime: "Production lead time",
+          moq: "MOQ",
+        };
+  const leadTime = formatLeadTime(
+    product.productionLeadTimeMinDays,
+    product.productionLeadTimeMaxDays,
+    locale,
+  );
 
   return (
     <Card className="group flex h-full flex-col overflow-hidden py-0">
@@ -74,6 +103,11 @@ export function ProductCard({ locale, product }: Readonly<ProductCardProps>) {
             <span className="text-muted-foreground font-normal">
               {labels.from}
             </span>
+          </p>
+        ) : null}
+        {leadTime ? (
+          <p className="text-muted-foreground text-sm">
+            {labels.leadTime}: {leadTime}
           </p>
         ) : null}
       </CardContent>

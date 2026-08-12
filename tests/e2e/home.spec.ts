@@ -229,6 +229,7 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
       name: "Multi Band Wireless Vintage Radio with Flashlight",
     }),
   ).toBeVisible();
+  await expect(page.getByText("Production lead time: 8 days")).toHaveCount(4);
 
   await page.getByRole("button", { name: "Shopping Bags" }).click();
   await expect(page.getByText("Reinforced Handle Bag")).toBeVisible();
