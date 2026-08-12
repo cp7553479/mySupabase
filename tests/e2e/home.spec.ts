@@ -113,3 +113,21 @@ test("public pages expose language-aware SEO metadata and crawler endpoints", as
     "https://logopress.example/zh/services",
   );
 });
+
+test("public navigation is keyboard reachable and unknown public pages give a recovery route", async ({
+  page,
+}) => {
+  await page.goto("/en");
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("link", { name: "LogoPress" }).first(),
+  ).toBeFocused();
+
+  await page.goto("/en/unknown-page");
+  await expect(
+    page.getByRole("heading", { name: "This page is not available." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Return to home" }),
+  ).toBeVisible();
+});
