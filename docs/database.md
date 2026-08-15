@@ -22,7 +22,7 @@ LogoPress 使用已链接的 Supabase 项目 `nizvigrplhvbvafwvcmy`。`SPEC.md` 
 
 主要表组：
 
-- 账户与权限：`profiles`、`organizations`、`organization_members`、`organization_addresses`、`roles`、`permissions`、`user_roles`；
+- 账户与权限：`profiles`、`organizations`、`organization_members`、`organization_addresses`、`roles`、`permissions`、`user_roles`；`profiles` 保存会员联系资料、职位、主要市场、采购偏好和审核状态。
 - 企业审核：`organization_review_events`；
 - 商品目录：`products`、`taxonomy_terms`、`product_specifications`、`media_assets`、`product_compliance_records`、`product_option_groups`、`product_option_values`、`product_variants`、`product_favorites`；
 - 价格：`price_books`、`product_price_grids`、`product_price_tiers`、`product_upcharge_grids`、`product_upcharge_tiers`；

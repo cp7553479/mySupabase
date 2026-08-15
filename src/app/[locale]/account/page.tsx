@@ -38,7 +38,9 @@ export default async function AccountPage({
     typeof email === "string"
       ? await supabase
           .from("profiles")
-          .select("full_name, phone, account_status")
+          .select(
+            "full_name, job_title, market, phone, preferences, account_status",
+          )
           .maybeSingle()
       : null;
   const organization =
@@ -97,9 +99,18 @@ export default async function AccountPage({
             detail: "你的账户已启用，可以继续使用会员服务。",
             label: "已启用",
           },
+          needs_information: {
+            detail: "请补充账户资料后，我们会继续进行审核。",
+            label: "待补充资料",
+          },
           pending: {
             detail: "我们正在核对你的账户资料；审核完成后会更新账户状态。",
             label: "待审核",
+          },
+          rejected: {
+            detail:
+              "本次账户申请未获通过。如需协助，请通过联系页面与我们沟通。",
+            label: "未通过",
           },
           suspended: {
             detail: "你的账户当前已暂停。如需协助，请通过联系页面与我们沟通。",
@@ -111,10 +122,20 @@ export default async function AccountPage({
             detail: "Your account is active and ready to use member services.",
             label: "Active",
           },
+          needs_information: {
+            detail:
+              "Please add the requested account details so that our review can continue.",
+            label: "More information needed",
+          },
           pending: {
             detail:
               "We are reviewing your account details and will update this status when the review is complete.",
             label: "Pending review",
+          },
+          rejected: {
+            detail:
+              "This account application was not approved. Contact us through the contact page for assistance.",
+            label: "Not approved",
           },
           suspended: {
             detail:
@@ -147,8 +168,11 @@ export default async function AccountPage({
           </div>
           <ProfileForm
             fullName={profile?.data?.full_name ?? ""}
+            jobTitle={profile?.data?.job_title ?? ""}
             locale={locale}
+            market={profile?.data?.market ?? ""}
             phone={profile?.data?.phone ?? ""}
+            preferences={profile?.data?.preferences ?? ""}
           />
           <OrganizationForm
             industry={organizationDetails?.organizations?.industry ?? ""}

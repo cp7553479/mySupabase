@@ -16,6 +16,15 @@ test("an approved member receives the member price through enquiry submission", 
   await expect(page.getByText(`Signed in as: ${email!}`)).toBeVisible({
     timeout: 30_000,
   });
+  await page.getByLabel("Full name").fill("Member Test");
+  await page.getByLabel("Job title").fill("Buyer");
+  await page.getByLabel("Phone").fill("+44 20 0000 0000");
+  await page.getByLabel("Primary market").fill("United Kingdom");
+  await page
+    .getByLabel("Sourcing preferences and notes")
+    .fill("Small-batch custom products.");
+  await page.getByRole("button", { name: "Save profile" }).click();
+  await expect(page.getByText("Profile saved.")).toBeVisible();
 
   await page.goto("/en/products/multi-band-wireless-vintage-radio");
   await expect(
