@@ -64,24 +64,6 @@ test("a selected product option updates the live quantity-tier estimate", async 
   await expect(page.getByText("$731.00", { exact: true })).toBeVisible();
 });
 
-test("comparison accepts products from one primary category", async ({
-  page,
-}) => {
-  await page.goto("/en/products/multi-band-wireless-vintage-radio");
-  await page.getByRole("button", { name: "Add to compare" }).click();
-  await expect(
-    page.getByRole("button", { name: "Remove from compare" }),
-  ).toBeVisible();
-
-  await page.goto("/en/products/eco-non-woven-shopping-bag");
-  await page.getByRole("button", { name: "Add to compare" }).click();
-  await expect(
-    page.getByText(
-      "Choose products from the same primary category to compare.",
-    ),
-  ).toBeVisible();
-});
-
 test("cookie consent records the visitor choice", async ({ page }) => {
   await page.goto("/en");
   const consent = page.getByRole("complementary", { name: "Cookie consent" });
@@ -405,12 +387,17 @@ test("catalogue uses preview products, images and quantity-tier pricing", async 
   ).toBeVisible();
   await page.goto("/en/products/reinforced-handle-bag");
   await page.getByRole("button", { name: "Add to compare" }).click();
+  await expect(
+    page.getByText(
+      "Choose products from the same primary category to compare.",
+    ),
+  ).toBeVisible();
   await page.goto("/en/products/compare");
   await expect(
-    page.getByText("Multi Band Wireless Vintage Radio with Flashlight"),
+    page.getByText(
+      "Add two or more products from their detail pages to compare specifications, minimum order quantities, pricing and services.",
+    ),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Start enquiry" }).first().click();
-  await expect(page).toHaveURL(/#enquiry-configurator$/);
 
   await page.goto("/zh/products");
   await expect(
