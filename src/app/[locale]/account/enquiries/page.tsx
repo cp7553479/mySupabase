@@ -24,7 +24,7 @@ export default async function AccountEnquiriesPage({
   const { data } = await supabase.auth.getClaims();
 
   if (typeof data?.claims.sub !== "string") {
-    redirect(`/${locale}/account`);
+    redirect(`/${locale}/account?next=/${locale}/account/enquiries`);
   }
 
   const [inquiry, submittedInquiries] = await Promise.all([

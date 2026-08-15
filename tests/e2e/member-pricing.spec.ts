@@ -92,4 +92,6 @@ test("an approved member receives the member price through enquiry submission", 
   await expect(
     page.getByRole("heading", { name: "Submitted enquiries" }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
 });

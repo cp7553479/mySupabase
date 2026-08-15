@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 import { getSupabasePublicEnvironment } from "@/lib/env/public";
+import { getSafeAccountRedirect } from "@/lib/auth/redirects";
 import { defaultLocale, isLocale } from "@/lib/i18n";
 
 export async function GET(request: NextRequest) {
@@ -13,7 +14,10 @@ export async function GET(request: NextRequest) {
     requestedLocale && isLocale(requestedLocale)
       ? requestedLocale
       : defaultLocale;
-  const redirectUrl = new URL(`/${locale}/account`, request.url);
+  const redirectUrl = new URL(
+    getSafeAccountRedirect(locale, request.nextUrl.searchParams.get("next")),
+    request.url,
+  );
   const response = NextResponse.redirect(redirectUrl);
 
   if (!tokenHash) {

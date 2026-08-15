@@ -8,6 +8,7 @@ import { OrganizationMembers } from "@/components/account/organization-members";
 import { ProfileForm } from "@/components/account/profile-form";
 import { SignOutButton } from "@/components/account/sign-out-button";
 import { Button } from "@/components/ui/button";
+import { getSafeAccountRedirect } from "@/lib/auth/redirects";
 import { isLocale } from "@/lib/i18n";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -15,12 +16,19 @@ export const dynamic = "force-dynamic";
 
 export default async function AccountPage({
   params,
-}: Readonly<{ params: Promise<{ locale: string }> }>) {
+  searchParams,
+}: Readonly<{
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ next?: string }>;
+}>) {
   const { locale } = await params;
+  const { next } = await searchParams;
 
   if (!isLocale(locale)) {
     notFound();
   }
+
+  const nextPath = getSafeAccountRedirect(locale, next);
 
   const supabase = await createServerSupabaseClient();
   const { data } = await supabase.auth.getClaims();
@@ -197,7 +205,7 @@ export default async function AccountPage({
         </div>
       ) : (
         <div className="mt-8 rounded-xl border p-6">
-          <AuthForm locale={locale} />
+          <AuthForm locale={locale} nextPath={nextPath} />
         </div>
       )}
     </section>

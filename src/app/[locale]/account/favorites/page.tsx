@@ -23,7 +23,7 @@ export default async function SavedProductsPage({
   const userId = claims?.claims.sub;
 
   if (typeof userId !== "string") {
-    redirect(`/${locale}/account`);
+    redirect(`/${locale}/account?next=/${locale}/account/favorites`);
   }
 
   const { data: favorites } = await supabase

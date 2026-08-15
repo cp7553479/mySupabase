@@ -37,6 +37,7 @@ Supabase CLI 是唯一远端迁移部署入口。当前任务没有生成 Drizzl
 - `src/proxy.ts` 在请求过程中刷新会话；服务端页面和路由使用 `getClaims()` 验证身份。
 - 部署时，在 Supabase Auth 中配置正式站点地址，并允许 `/auth/confirm` 作为邮件确认回调地址。
 - 邮件确认模板使用 `/auth/confirm?token_hash={{ .TokenHash }}&type=email`，由应用完成会话交换后返回账户页。
+- 密码重设模板使用同一回调地址并传入 `type=recovery`；生产环境需配置受信任 SMTP 后再验证真实邮件投递。
 
 ## Cloudflare Workers
 

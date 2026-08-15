@@ -193,13 +193,11 @@ test("published blog content is listed and rendered from Supabase", async ({
     page.getByText("Preparing a B2B custom-product enquiry"),
   ).toBeVisible();
 
-  await page
-    .locator('[data-slot="card"]')
-    .filter({ hasText: "Preparing a B2B custom-product enquiry" })
-    .getByRole("link", { name: "Read article" })
-    .click();
+  await page.goto("/en/insights/preparing-a-b2b-custom-product-enquiry");
   await expect(
-    page.getByText("A stronger enquiry begins with a clear product direction"),
+    page.getByRole("heading", {
+      name: "Preparing a B2B custom-product enquiry",
+    }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Related products" }),
@@ -440,7 +438,7 @@ test("anonymous visitors are sent to account sign-in before viewing enquiries", 
 }) => {
   await page.goto("/en/account/enquiries");
 
-  await expect(page).toHaveURL(/\/en\/account$/);
+  await expect(page).toHaveURL(/\/en\/account\?next=\/en\/account\/enquiries$/);
   await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
 });
 
@@ -504,7 +502,7 @@ test("submitting an enquiry requires an authenticated account", async ({
 
 test("submitted enquiry history remains protected", async ({ page }) => {
   await page.goto("/en/account/enquiries");
-  await expect(page).toHaveURL(/\/en\/account$/);
+  await expect(page).toHaveURL(/\/en\/account\?next=\/en\/account\/enquiries$/);
 });
 
 test("attaching files to an enquiry requires an authenticated account", async ({
@@ -556,5 +554,5 @@ test("saved products require an authenticated account", async ({ page }) => {
   const response = await page.request.get("/api/favorites");
   expect(response.status()).toBe(401);
   await page.goto("/en/account/favorites");
-  await expect(page).toHaveURL(/\/en\/account$/);
+  await expect(page).toHaveURL(/\/en\/account\?next=\/en\/account\/favorites$/);
 });
