@@ -13,6 +13,7 @@ import {
   getPublishedCatalogueProductDetails,
 } from "@/lib/catalogue/queries";
 import { isLocale } from "@/lib/i18n";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +63,19 @@ export default async function ProductDetailPage({
   if (!product) {
     notFound();
   }
+
+  const supabase = await createServerSupabaseClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  const userId = claims?.claims.sub;
+  const favorite =
+    typeof userId === "string"
+      ? await supabase
+          .from("product_favorites")
+          .select("product_id")
+          .eq("product_id", product.id)
+          .eq("user_id", userId)
+          .maybeSingle()
+      : null;
 
   const relatedProducts = catalogue
     .filter((candidate) => product.relatedProductIds.includes(candidate.id))
@@ -194,7 +208,11 @@ export default async function ProductDetailPage({
             services={product.services}
             upcharges={product.upcharges}
           />
-          <FavoriteButton locale={locale} productId={product.id} />
+          <FavoriteButton
+            initiallySaved={Boolean(favorite?.data)}
+            locale={locale}
+            productId={product.id}
+          />
           <CompareButton locale={locale} productId={product.id} />
         </div>
       </div>

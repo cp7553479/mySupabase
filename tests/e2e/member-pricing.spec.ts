@@ -21,6 +21,26 @@ test("an approved member receives the member price through enquiry submission", 
   await expect(
     page.locator("#enquiry-configurator").getByText("$12.57", { exact: true }),
   ).toBeVisible();
+  const favoriteResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      response.url().includes("/api/favorites"),
+  );
+  await page.getByRole("button", { name: "Save product" }).click();
+  expect((await favoriteResponse).status()).toBe(201);
+  await expect(
+    page.getByRole("button", { name: "Remove saved product" }),
+  ).toBeVisible();
+  await page.goto("/en/account/favorites");
+  await expect(
+    page.getByRole("heading", {
+      name: "Multi Band Wireless Vintage Radio with Flashlight",
+    }),
+  ).toBeVisible();
+  await page.goto("/en/products/multi-band-wireless-vintage-radio");
+  await expect(
+    page.getByRole("button", { name: "Remove saved product" }),
+  ).toBeVisible();
 
   await page.getByRole("button", { name: "Full Color" }).click();
   await expect(
@@ -33,6 +53,11 @@ test("an approved member receives the member price through enquiry submission", 
     ),
   ).toBeVisible();
 
+  const attachmentResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      response.url().includes("/attachments"),
+  );
   await page.locator('input[type="file"]').setInputFiles({
     buffer: Buffer.from(
       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL7JwAAAABJRU5ErkJggg==",
@@ -41,6 +66,7 @@ test("an approved member receives the member price through enquiry submission", 
     mimeType: "image/png",
     name: "member-artwork.png",
   });
+  expect((await attachmentResponse).status()).toBe(201);
   await expect(page.getByText("Attachment added to enquiry.")).toBeVisible();
 
   await page.goto("/en/account/enquiries");
