@@ -8,6 +8,7 @@ import {
   validateProductOptionSelections,
 } from "@/lib/catalogue/option-validation";
 import { calculateProductEstimate } from "@/lib/catalogue/pricing";
+import { getVisibleDefaultPriceGrid } from "@/lib/catalogue/server-price-grid";
 import { getVisibleProductUpcharges } from "@/lib/catalogue/server-pricing";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -27,8 +28,6 @@ type ProductRow = {
   name: string;
   product_number: string;
 };
-
-type PriceGridRow = { id: string };
 
 type PriceTierRow = {
   id: string;
@@ -165,16 +164,18 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: gridData, error: gridError } = await supabase
-    .from("product_price_grids")
-    .select("id")
-    .eq("product_id", product.id)
-    .eq("is_default", true)
-    .eq("is_active", true)
-    .maybeSingle();
-  const grid = gridData as PriceGridRow | null;
+  let grid;
 
-  if (gridError || !grid) {
+  try {
+    grid = await getVisibleDefaultPriceGrid(supabase, product.id);
+  } catch {
+    return NextResponse.json(
+      { error: "Product pricing is unavailable." },
+      { status: 409 },
+    );
+  }
+
+  if (!grid) {
     return NextResponse.json(
       { error: "Product pricing is unavailable." },
       { status: 409 },

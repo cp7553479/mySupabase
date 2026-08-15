@@ -5,14 +5,14 @@
 ## 本地运行
 
 1. 使用 Node.js 20.19、22.12 或 24.0 以上版本并执行 `npm install`。
-2. 如后续开发需要 Supabase，复制 `.env.example` 为 `.env.local` 并只填写本地值；当前基础页面无需环境变量。
+2. 复制 `.env.example` 为 `.env.local` 并填写本地所需的公开 Supabase URL 与 Publishable Key。
 3. 首次执行端到端测试前运行 `npx playwright install chromium`。
 4. 执行 `npm run dev` 启动开发服务器；执行 `npm run verify` 运行完整质量门槛。
 
 ## 质量门槛
 
 - 每次变更至少运行 `npm run format:check`、`npm run lint`、`npm run type-check` 和 `npm run test:unit`。
-- 涉及页面、路由或用户交互时，还必须运行 `npm run test:e2e`。当前健康检查只验证首页、页面标题和基础标题可见。
+- 涉及页面、路由或用户交互时，还必须运行 `npm run test:e2e`。
 - 业务功能完成时，应为关键业务规则补充单元/组件测试，并按已确认的用户主路径补充端到端测试；不得用未实现流程的占位断言代替。
 - 合并或发布前必须通过 `npm run verify`，即格式、Lint、类型、全部测试和生产构建均成功；不得保留 `.only`、无说明的跳过测试或真实密钥。
 - 单元测试使用可控替身；公开页面端到端测试使用当前已链接 Supabase 项目中的预览数据。涉及登录、写入或权限变更的端到端测试必须使用独立测试账号与可清理数据。
@@ -34,6 +34,7 @@ Supabase CLI 是唯一远端迁移部署入口。当前任务没有生成 Drizzl
 ## Supabase 认证
 
 - 本地认证使用 `.env.local` 中的公开 Supabase URL 与 Publishable Key。
+- `src/proxy.ts` 在请求过程中刷新会话；服务端页面和路由使用 `getClaims()` 验证身份。
 - 部署时，在 Supabase Auth 中配置正式站点地址，并允许 `/auth/confirm` 作为邮件确认回调地址。
 - 邮件确认模板使用 `/auth/confirm?token_hash={{ .TokenHash }}&type=email`，由应用完成会话交换后返回账户页。
 

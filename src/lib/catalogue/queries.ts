@@ -6,7 +6,8 @@ import type {
   ProductUpchargeCriterion,
   ProductUpchargeTier,
 } from "@/lib/catalogue/pricing";
-import { createPublicSupabaseClient } from "@/lib/supabase/client";
+import { selectVisibleDefaultPriceGrid } from "@/lib/catalogue/price-book-selection";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type CatalogueProduct = {
   filterAttributes: CatalogueFilterAttribute[];
@@ -116,7 +117,13 @@ type MediaAssetRow = {
 
 type PriceGridRow = {
   id: string;
+  price_book_id: string;
   product_id: string;
+};
+
+type PriceBookRow = {
+  id: string;
+  visibility: "authenticated" | "public" | "role";
 };
 
 type PriceTierRow = {
@@ -291,16 +298,26 @@ function toGallery(
 function toTiers(
   productId: string,
   grids: PriceGridRow[],
+  priceBooks: PriceBookRow[],
   tiers: PriceTierRow[],
 ) {
-  const gridIds = new Set(
-    grids
-      .filter((grid) => grid.product_id === productId)
-      .map((grid) => grid.id),
+  const selectedGrid = selectVisibleDefaultPriceGrid(
+    productId,
+    grids.map((grid) => ({
+      id: grid.id,
+      priceBookId: grid.price_book_id,
+      productId: grid.product_id,
+    })),
+    priceBooks.map((priceBook) => ({
+      id: priceBook.id,
+      visibility: priceBook.visibility,
+    })),
   );
 
+  if (!selectedGrid) return [];
+
   return tiers
-    .filter((tier) => gridIds.has(tier.price_grid_id))
+    .filter((tier) => tier.price_grid_id === selectedGrid.id)
     .map((tier) => ({
       maximumQuantity: tier.maximum_quantity,
       minimumQuantity: tier.minimum_quantity,
@@ -310,7 +327,7 @@ function toTiers(
 }
 
 async function getPublishedProductRows(locale: string) {
-  const supabase = createPublicSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data: products, error: productsError } = await supabase
     .from("products")
     .select(
@@ -337,6 +354,7 @@ async function getPublishedProductRows(locale: string) {
       optionValues: [],
       productTaxonomyTerms: [],
       products: productRows,
+      priceBooks: [],
       relatedProducts: [],
       serviceDefinitions: [],
       services: [],
@@ -374,7 +392,7 @@ async function getPublishedProductRows(locale: string) {
       .in("product_id", productIds),
     supabase
       .from("product_price_grids")
-      .select("id, product_id")
+      .select("id, product_id, price_book_id")
       .in("product_id", productIds)
       .eq("is_default", true)
       .eq("is_active", true),
@@ -439,6 +457,7 @@ async function getPublishedProductRows(locale: string) {
   const productTaxonomyTerms =
     productTaxonomyResult.data as ProductTaxonomyTermRow[];
   const gridIds = grids.map((grid) => grid.id);
+  const priceBookIds = [...new Set(grids.map((grid) => grid.price_book_id))];
   const mediaAssetIds = media.map((item) => item.media_asset_id);
   const taxonomyTermIds = productTaxonomyTerms.map(
     (association) => association.taxonomy_term_id,
@@ -449,6 +468,7 @@ async function getPublishedProductRows(locale: string) {
   const upchargeGridIds = upchargeGrids.map((grid) => grid.id);
   const [
     assetsResult,
+    priceBooksResult,
     tiersResult,
     taxonomyTermsResult,
     serviceDefinitionsResult,
@@ -461,6 +481,12 @@ async function getPublishedProductRows(locale: string) {
           .from("media_assets")
           .select("id, bucket_id, object_path, external_url, alt_text")
           .in("id", mediaAssetIds)
+      : Promise.resolve({ data: [], error: null }),
+    priceBookIds.length
+      ? supabase
+          .from("price_books")
+          .select("id, visibility")
+          .in("id", priceBookIds)
       : Promise.resolve({ data: [], error: null }),
     gridIds.length
       ? supabase
@@ -510,6 +536,7 @@ async function getPublishedProductRows(locale: string) {
 
   for (const result of [
     assetsResult,
+    priceBooksResult,
     tiersResult,
     taxonomyTermsResult,
     serviceDefinitionsResult,
@@ -528,6 +555,7 @@ async function getPublishedProductRows(locale: string) {
     optionGroups,
     optionValues: optionValuesResult.data as ProductOptionValueRow[],
     products: productRows,
+    priceBooks: priceBooksResult.data as PriceBookRow[],
     relatedProducts: relatedProductsResult.data as ProductRelatedRow[],
     productTaxonomyTerms,
     services: servicesResult.data as ProductServiceRow[],
@@ -570,7 +598,12 @@ function toCatalogueProducts(
       product,
       translationsByProductId.get(product.id),
     );
-    const priceTiers = toTiers(product.id, rows.grids, rows.tiers);
+    const priceTiers = toTiers(
+      product.id,
+      rows.grids,
+      rows.priceBooks,
+      rows.tiers,
+    );
     const categories = rows.productTaxonomyTerms
       .filter((association) => association.product_id === product.id)
       .map((association) => taxonomyTermsById.get(association.taxonomy_term_id))

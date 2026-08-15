@@ -1,6 +1,6 @@
 # LogoPress
 
-LogoPress 是使用 Next.js App Router 构建的定制商品 B2B 网站。当前仓库仅完成工程基础设施；业务页面、认证和数据访问将在后续任务中实现。
+LogoPress 是使用 Next.js App Router 构建的定制商品 B2B 网站，包含商品目录、配置询单、会员认证、统一会员价和内容展示的首期实现。
 
 ## 本地开发
 
@@ -12,7 +12,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-`.env.local` 只填写本地所需配置，不提交真实密钥。基础页面无需配置 Supabase 即可构建和运行。
+`.env.local` 只填写本地所需的公开 Supabase 配置，不提交真实密钥。
 
 ## 质量检查
 
@@ -35,4 +35,4 @@ npm run build
 npm run verify
 ```
 
-项目结构、本地约定和质量门槛见 [`docs/`](docs/README.md)。Supabase CLI 是唯一远端迁移部署入口；本基础任务未生成 Drizzle 迁移，也未连接远端数据库。
+项目结构、本地约定和质量门槛见 [`docs/`](docs/README.md)。Supabase CLI 是唯一远端迁移部署入口。

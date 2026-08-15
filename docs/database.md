@@ -7,9 +7,9 @@ LogoPress 使用已链接的 Supabase 项目 `nizvigrplhvbvafwvcmy`。`SPEC.md` 
 当前模型覆盖：
 
 - 商品、分类、规格/选项、变体、图片与资料；
-- 按数量分层的基础价格和附加费用，以及公开、登录会员、指定角色三种价格可见范围；
+- 按数量分层的基础价格和附加费用，以及公开价和统一会员价；
 - 企业账户、成员、后台角色和权限；
-- 企业专属价格表和企业审核记录；
+- 企业审核记录；
 - 多商品询单、选项与价格快照、服务需求、附件、状态、负责人和沟通记录；
 - 报价及其版本、报价明细、调整项和客户确认；
 - 页面、博客、案例、FAQ 和资源内容，以及站点资料、可用语言和导航。
@@ -23,7 +23,7 @@ LogoPress 使用已链接的 Supabase 项目 `nizvigrplhvbvafwvcmy`。`SPEC.md` 
 主要表组：
 
 - 账户与权限：`profiles`、`organizations`、`organization_members`、`organization_addresses`、`roles`、`permissions`、`user_roles`；
-- 企业价格与审核：`organization_price_books`、`organization_review_events`；
+- 企业审核：`organization_review_events`；
 - 商品目录：`products`、`taxonomy_terms`、`product_specifications`、`media_assets`、`product_compliance_records`、`product_option_groups`、`product_option_values`、`product_variants`、`product_favorites`；
 - 价格：`price_books`、`product_price_grids`、`product_price_tiers`、`product_upcharge_grids`、`product_upcharge_tiers`；
 - 询单与报价：`inquiries`、`inquiry_items`、`inquiry_attachments`、`inquiry_communications`、`quotes`、`quote_versions`、`quote_items`、`quote_responses`；询单保留采购用途、期望交付日期、收货国家/地区，以及样品、效果图和设计支持需求；
@@ -39,8 +39,7 @@ LogoPress 使用已链接的 Supabase 项目 `nizvigrplhvbvafwvcmy`。`SPEC.md` 
 
 - 匿名用户只读已发布商品、内容及对其可见的价格；
 - 登录用户可访问自己的资料、所属企业和有权访问的询单；
-- 价格表通过 `public`、`authenticated` 或 `role` 可见范围控制；
-- 企业专属价格表仅对该企业的有效成员和价格管理员可见；
+- 公开访客和未审核账号读取公开价；拥有 `approved_member` 角色的审核会员读取统一会员价；
 - 后台写入按 `catalog.manage`、`pricing.manage`、`members.manage`、`inquiries.manage`、`content.manage` 权限隔离；
 - 私有授权函数位于未暴露的 `app_private` schema，并固定 `search_path`。
 

@@ -14,7 +14,15 @@ export async function createServerSupabaseClient() {
       getAll() {
         return cookieStore.getAll();
       },
-      setAll() {},
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, options, value }) =>
+            cookieStore.set(name, value, options),
+          );
+        } catch {
+          // Session refreshes are persisted by the request proxy.
+        }
+      },
     },
   });
 }

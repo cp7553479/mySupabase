@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { calculateProductEstimate } from "@/lib/catalogue/pricing";
+import { getVisibleDefaultPriceGrid } from "@/lib/catalogue/server-price-grid";
 import { getVisibleProductUpcharges } from "@/lib/catalogue/server-pricing";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -12,8 +13,6 @@ type ProductRow = {
   default_currency_code: string;
   minimum_order_quantity: number | null;
 };
-
-type PriceGridRow = { id: string };
 
 type PriceTierRow = {
   id: string;
@@ -138,16 +137,18 @@ export async function PATCH(
     );
   }
 
-  const { data: gridData, error: gridError } = await supabase
-    .from("product_price_grids")
-    .select("id")
-    .eq("product_id", item.product_id)
-    .eq("is_default", true)
-    .eq("is_active", true)
-    .maybeSingle();
-  const grid = gridData as PriceGridRow | null;
+  let grid;
 
-  if (gridError || !grid) {
+  try {
+    grid = await getVisibleDefaultPriceGrid(supabase, item.product_id);
+  } catch {
+    return NextResponse.json(
+      { error: "Product pricing is unavailable." },
+      { status: 409 },
+    );
+  }
+
+  if (!grid) {
     return NextResponse.json(
       { error: "Product pricing is unavailable." },
       { status: 409 },
