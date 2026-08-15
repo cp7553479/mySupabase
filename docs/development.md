@@ -38,6 +38,8 @@ Supabase CLI 是唯一远端迁移部署入口。当前任务没有生成 Drizzl
 - 部署时，在 Supabase Auth 中配置正式站点地址，并允许 `/auth/confirm` 作为邮件确认回调地址。
 - 邮件确认模板使用 `/auth/confirm?token_hash={{ .TokenHash }}&type=email`，由应用完成会话交换后返回账户页。
 - 密码重设模板使用同一回调地址并传入 `type=recovery`；生产环境需配置受信任 SMTP 后再验证真实邮件投递。
+- 企业成员由具备 `members.manage` 权限的后台管理员添加。新邮箱使用 Supabase `inviteUserByEmail` 发送邀请；邀请模板回调使用 `/auth/confirm?token_hash={{ .TokenHash }}&type=invite`，应用在验证成功后启用对应企业成员关系。
+- `SUPABASE_SECRET_KEY` 仅配置在可信服务端与 Cloudflare 的服务端环境变量中，用于 Supabase Auth 管理接口；浏览器代码和 `NEXT_PUBLIC_` 变量不得使用该密钥。
 
 ## Cloudflare Workers
 

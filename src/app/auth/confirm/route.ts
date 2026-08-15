@@ -6,6 +6,7 @@ import { createServerClient } from "@supabase/ssr";
 import { getSupabasePublicEnvironment } from "@/lib/env/public";
 import { getSafeAccountRedirect } from "@/lib/auth/redirects";
 import { defaultLocale, isLocale } from "@/lib/i18n";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 export async function GET(request: NextRequest) {
   const tokenHash = request.nextUrl.searchParams.get("token_hash");
@@ -40,7 +41,22 @@ export async function GET(request: NextRequest) {
   const type = request.nextUrl.searchParams.get("type") as EmailOtpType | null;
 
   if (type) {
-    await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type,
+    });
+    if (!error && type === "invite" && data.user) {
+      const { error: membershipError } = await createAdminSupabaseClient()
+        .from("organization_members")
+        .update({ joined_at: new Date().toISOString(), status: "active" })
+        .eq("user_id", data.user.id)
+        .eq("status", "invited");
+      if (membershipError) {
+        throw new Error(
+          `Could not activate the invited company membership: ${membershipError.message}`,
+        );
+      }
+    }
   }
 
   return response;

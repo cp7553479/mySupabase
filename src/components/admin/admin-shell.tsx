@@ -12,8 +12,18 @@ type AdminShellProps = {
 export function AdminShell({ children, locale }: Readonly<AdminShellProps>) {
   const copy =
     locale === "zh"
-      ? { account: "返回账户", title: "网站管理" }
-      : { account: "Back to account", title: "Site administration" };
+      ? {
+          account: "返回账户",
+          members: "企业成员",
+          overview: "业务概览",
+          title: "网站管理",
+        }
+      : {
+          account: "Back to account",
+          members: "Company members",
+          overview: "Overview",
+          title: "Site administration",
+        };
 
   return (
     <section className="mx-auto max-w-7xl px-5 py-12 lg:px-8 lg:py-20">
@@ -27,11 +37,20 @@ export function AdminShell({ children, locale }: Readonly<AdminShellProps>) {
       </header>
       <div className="mt-8 grid gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
         <nav aria-label={copy.title} className="rounded-xl border p-4">
-          <p className="text-muted-foreground text-sm leading-6">
-            {locale === "zh"
-              ? "已授权的管理功能会在这里显示。"
-              : "Management areas appear here when they are authorized."}
-          </p>
+          <div className="space-y-1 text-sm">
+            <Link
+              className="hover:bg-muted block rounded-md px-3 py-2"
+              href={`/${locale}/admin`}
+            >
+              {copy.overview}
+            </Link>
+            <Link
+              className="hover:bg-muted block rounded-md px-3 py-2"
+              href={`/${locale}/admin/members`}
+            >
+              {copy.members}
+            </Link>
+          </div>
         </nav>
         <div>{children}</div>
       </div>

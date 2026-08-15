@@ -11,3 +11,16 @@ export function getDatabaseUrl(): string {
 
   return databaseUrl;
 }
+
+/** Reads the key used only by trusted server routes for Supabase Auth administration. */
+export function getSupabaseSecretKey(): string {
+  const secretKey = process.env.SUPABASE_SECRET_KEY;
+
+  if (!secretKey) {
+    throw new Error(
+      "Missing required server environment variable: SUPABASE_SECRET_KEY",
+    );
+  }
+
+  return secretKey;
+}
