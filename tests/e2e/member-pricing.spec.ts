@@ -41,6 +41,18 @@ test("an approved member receives the member price through enquiry submission", 
   await expect(
     page.getByRole("button", { name: "Remove saved product" }),
   ).toBeVisible();
+  const removeFavoriteResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === "DELETE" &&
+      response.url().includes("/api/favorites"),
+  );
+  await page.getByRole("button", { name: "Remove saved product" }).click();
+  expect((await removeFavoriteResponse).status()).toBe(204);
+  await page.goto("/en/account/favorites");
+  await expect(
+    page.getByText("You have not saved any products yet."),
+  ).toBeVisible();
+  await page.goto("/en/products/multi-band-wireless-vintage-radio");
 
   await page.getByRole("button", { name: "Full Color" }).click();
   await expect(

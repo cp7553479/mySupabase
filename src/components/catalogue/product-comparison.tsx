@@ -9,9 +9,10 @@ import {
   readComparison,
   storageKey,
   subscribeToComparison,
+  type ComparisonSelection,
 } from "@/components/catalogue/compare-button";
 
-const emptyComparison: string[] = [];
+const emptyComparison: ComparisonSelection[] = [];
 
 function formatPrice(amount: number, currencyCode: string, locale: string) {
   return new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", {
@@ -54,7 +55,9 @@ export function ProductComparison({
   const selectedProducts = useMemo(
     () =>
       selectedIds
-        .map((id) => products.find((product) => product.id === id))
+        .map((selection) =>
+          products.find((product) => product.id === selection.productId),
+        )
         .filter(
           (product): product is CatalogueProductDetail => product !== undefined,
         ),
@@ -90,7 +93,7 @@ export function ProductComparison({
         };
 
   function remove(productId: string) {
-    const next = selectedIds.filter((id) => id !== productId);
+    const next = selectedIds.filter((item) => item.productId !== productId);
     window.localStorage.setItem(storageKey, JSON.stringify(next));
     window.dispatchEvent(new Event("logopress-comparison-updated"));
   }

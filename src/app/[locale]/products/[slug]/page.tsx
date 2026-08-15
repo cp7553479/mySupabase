@@ -213,7 +213,11 @@ export default async function ProductDetailPage({
             locale={locale}
             productId={product.id}
           />
-          <CompareButton locale={locale} productId={product.id} />
+          <CompareButton
+            category={product.categories.at(-1) ?? null}
+            locale={locale}
+            productId={product.id}
+          />
         </div>
       </div>
       {product.description ? (

@@ -7,10 +7,15 @@ import { Button } from "@/components/ui/button";
 
 const storageKey = "logopress_product_comparison";
 const maximumProducts = 4;
-let cachedComparisonRaw: string | null = null;
-let cachedComparison: string[] = [];
+export type ComparisonSelection = {
+  category: string;
+  productId: string;
+};
 
-export function readComparison() {
+let cachedComparisonRaw: string | null = null;
+let cachedComparison: ComparisonSelection[] = [];
+
+export function readComparison(): ComparisonSelection[] {
   try {
     const raw = window.localStorage.getItem(storageKey) ?? "[]";
     if (raw === cachedComparisonRaw) {
@@ -18,7 +23,13 @@ export function readComparison() {
     }
     const value = JSON.parse(raw);
     cachedComparison = Array.isArray(value)
-      ? value.filter((item): item is string => typeof item === "string")
+      ? value.filter(
+          (item): item is ComparisonSelection =>
+            typeof item === "object" &&
+            item !== null &&
+            typeof item.category === "string" &&
+            typeof item.productId === "string",
+        )
       : [];
     cachedComparisonRaw = raw;
     return cachedComparison;
@@ -39,12 +50,13 @@ export function subscribeToComparison(onStoreChange: () => void) {
 }
 
 export function CompareButton({
+  category,
   locale,
   productId,
-}: Readonly<{ locale: string; productId: string }>) {
+}: Readonly<{ category: string | null; locale: string; productId: string }>) {
   const included = useSyncExternalStore(
     subscribeToComparison,
-    () => readComparison().includes(productId),
+    () => readComparison().some((item) => item.productId === productId),
     () => false,
   );
   const [message, setMessage] = useState<string | null>(null);
@@ -52,21 +64,35 @@ export function CompareButton({
     locale === "zh"
       ? {
           add: "加入对比",
+          category: "请选择同一主要分类下的商品进行对比。",
           limit: `最多比较 ${maximumProducts} 个商品。`,
           remove: "移出对比",
         }
       : {
           add: "Add to compare",
+          category:
+            "Choose products from the same primary category to compare.",
           limit: `Compare up to ${maximumProducts} products.`,
           remove: "Remove from compare",
         };
 
   function toggle() {
     const current = readComparison();
-    const next = current.includes(productId)
-      ? current.filter((id) => id !== productId)
+    const existing = current.some((item) => item.productId === productId);
+    const currentCategory = current[0]?.category;
+
+    if (
+      !existing &&
+      (!category || (currentCategory && currentCategory !== category))
+    ) {
+      setMessage(copy.category);
+      return;
+    }
+
+    const next = existing
+      ? current.filter((item) => item.productId !== productId)
       : current.length < maximumProducts
-        ? [...current, productId]
+        ? [...current, { category, productId }]
         : null;
 
     if (!next) {
