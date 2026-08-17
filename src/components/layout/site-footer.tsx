@@ -26,10 +26,10 @@ export function SiteFooter({
         <div className="flex max-w-sm flex-col gap-4">
           <Image
             alt={site.siteName}
-            className="h-8 w-auto"
-            height={55}
+            className="h-auto w-40"
+            height={2652}
             src="/brand/logopress-black.png"
-            width={180}
+            width={3559}
           />
           <p className="text-muted-foreground text-sm leading-6">
             {copy.footerDescription}

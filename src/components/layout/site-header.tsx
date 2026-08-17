@@ -31,11 +31,11 @@ export function SiteHeader({
         <Link className="shrink-0" href={prefix}>
           <Image
             alt={siteName}
-            className="h-8 w-auto"
-            height={55}
+            className="h-auto w-24"
+            height={2652}
             priority
             src="/brand/logopress-black.png"
-            width={180}
+            width={3559}
           />
         </Link>
         <nav className="hidden items-center gap-6 lg:flex" aria-label="Primary">
