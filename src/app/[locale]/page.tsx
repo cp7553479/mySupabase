@@ -17,11 +17,14 @@ import { getPublishedHomeSections } from "@/lib/site/queries";
 
 export const dynamic = "force-dynamic";
 
-const proofPoints = [
-  "Customisable products",
-  "Quantity-based pricing",
-  "Dedicated enquiry support",
-];
+const proofPoints = {
+  en: [
+    "Customisable products",
+    "Quantity-based pricing",
+    "Dedicated enquiry support",
+  ],
+  zh: ["支持定制选项", "按数量分层报价", "专人询单支持"],
+};
 
 export default async function LocaleHomePage({
   params,
@@ -38,62 +41,60 @@ export default async function LocaleHomePage({
 
   return (
     <>
-      <section className="overflow-hidden border-b">
-        <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:py-24">
-          <div className="flex flex-col justify-center gap-7">
+      <section className="bg-foreground text-background relative isolate overflow-hidden border-b">
+        <Image
+          alt="Custom-product samples prepared for a LogoPress enquiry"
+          className="object-cover"
+          fill
+          preload
+          sizes="100vw"
+          src="/brand/logopress-hero.png"
+        />
+        <div className="absolute inset-0 bg-black/65" />
+        <div className="relative mx-auto flex min-h-135 max-w-4xl flex-col items-center justify-center gap-7 px-5 py-20 text-center lg:min-h-170 lg:px-8 lg:py-28">
+          <div className="flex flex-col items-center gap-7">
             <Badge className="w-fit" variant="secondary">
               <SparklesIcon data-icon="inline-start" />
               {copy.heroEyebrow}
             </Badge>
-            <div className="flex flex-col gap-5">
-              <h1 className="max-w-xl text-5xl font-semibold tracking-[-0.04em] text-balance sm:text-6xl lg:text-7xl">
+            <div className="flex max-w-3xl flex-col gap-5">
+              <h1 className="text-5xl font-semibold tracking-[-0.04em] text-balance sm:text-6xl lg:text-7xl">
                 {copy.heroTitle}
               </h1>
-              <p className="text-muted-foreground max-w-lg text-lg leading-8">
+              <p className="text-background/85 text-lg leading-8 sm:text-xl">
                 {copy.heroDescription}
               </p>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg">
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button asChild size="lg" variant="secondary">
                 <Link href={`${prefix}/products`}>
                   {copy.browseProducts}
                   <ArrowRightIcon data-icon="inline-end" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
+              <Button
+                asChild
+                className="border-background/70 text-background hover:bg-background/15 hover:text-background bg-transparent"
+                size="lg"
+                variant="outline"
+              >
                 <Link href={`${prefix}/services`}>{copy.learnMore}</Link>
               </Button>
             </div>
-            <div className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-2 text-sm">
-              {proofPoints.map((point) => (
-                <span className="flex items-center gap-2" key={point}>
-                  <CheckIcon
-                    className="text-foreground size-4"
-                    aria-hidden="true"
-                  />
-                  {point}
-                </span>
-              ))}
-            </div>
           </div>
-          <div className="bg-muted relative flex min-h-90 overflow-hidden rounded-3xl border p-6 lg:min-h-132 lg:p-10">
-            <Image
-              alt="Unbranded custom-product samples prepared for a LogoPress enquiry"
-              className="object-cover"
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 55vw"
-              src="/brand/logopress-hero.png"
-            />
-            <div className="bg-background/85 relative z-10 mt-auto max-w-sm rounded-2xl border border-black/10 p-6 shadow-sm backdrop-blur">
-              <p className="text-muted-foreground text-sm font-semibold tracking-[0.16em] uppercase">
-                LogoPress
-              </p>
-              <p className="mt-3 text-2xl font-semibold tracking-tight">
-                Built for product ideas that need a considered finish.
-              </p>
+        </div>
+      </section>
+      <section className="bg-background border-b">
+        <div className="mx-auto grid max-w-7xl gap-5 px-5 py-7 sm:grid-cols-3 lg:px-8">
+          {proofPoints[locale].map((point) => (
+            <div
+              className="flex items-center justify-center gap-2 text-center text-sm font-medium"
+              key={point}
+            >
+              <CheckIcon className="size-4" aria-hidden="true" />
+              {point}
             </div>
-          </div>
+          ))}
         </div>
       </section>
       <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-24">

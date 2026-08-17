@@ -101,7 +101,8 @@ test("language selection is remembered for the root entry point", async ({
   page,
 }) => {
   await page.goto("/en");
-  await page.getByRole("link", { name: "中文" }).first().click();
+  await page.getByRole("button", { name: "Select language" }).click();
+  await page.getByRole("menuitemradio", { name: "简体中文" }).click();
   await expect(page).toHaveURL(/\/zh$/);
 
   await page.goto("/");
