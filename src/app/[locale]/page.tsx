@@ -19,11 +19,39 @@ export const dynamic = "force-dynamic";
 
 const proofPoints = {
   en: [
-    "Customisable products",
-    "Quantity-based pricing",
-    "Dedicated enquiry support",
+    {
+      description: "Configure options that fit your procurement brief.",
+      icon: "/brand/proof/customisable-products.png",
+      title: "Customisable products",
+    },
+    {
+      description: "See transparent estimates across quantity tiers.",
+      icon: "/brand/proof/quantity-pricing.png",
+      title: "Quantity-based pricing",
+    },
+    {
+      description: "Bring questions and artwork into one enquiry.",
+      icon: "/brand/proof/enquiry-support.png",
+      title: "Dedicated enquiry support",
+    },
   ],
-  zh: ["支持定制选项", "按数量分层报价", "专人询单支持"],
+  zh: [
+    {
+      description: "按采购需求选择合适的定制选项。",
+      icon: "/brand/proof/customisable-products.png",
+      title: "支持定制选项",
+    },
+    {
+      description: "按数量阶梯查看清晰的预估价格。",
+      icon: "/brand/proof/quantity-pricing.png",
+      title: "按数量分层报价",
+    },
+    {
+      description: "将咨询与设计资料集中到同一份询单。",
+      icon: "/brand/proof/enquiry-support.png",
+      title: "专人询单支持",
+    },
+  ],
 };
 
 export default async function LocaleHomePage({
@@ -85,14 +113,28 @@ export default async function LocaleHomePage({
         </div>
       </section>
       <section className="bg-background border-b">
-        <div className="mx-auto grid max-w-7xl gap-5 px-5 py-7 sm:grid-cols-3 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-6 px-5 py-8 sm:grid-cols-3 lg:px-8">
           {proofPoints[locale].map((point) => (
-            <div
-              className="flex items-center justify-center gap-2 text-center text-sm font-medium"
-              key={point}
-            >
-              <CheckIcon className="size-4" aria-hidden="true" />
-              {point}
+            <div className="flex items-center gap-4" key={point.title}>
+              <div className="relative size-16 shrink-0">
+                <Image
+                  alt=""
+                  className="object-contain"
+                  fill
+                  sizes="64px"
+                  src={point.icon}
+                />
+                <CheckIcon
+                  aria-hidden="true"
+                  className="bg-background text-success absolute right-0 bottom-0 size-5 rounded-full p-0.5"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-semibold">{point.title}</p>
+                <p className="text-muted-foreground text-sm leading-5">
+                  {point.description}
+                </p>
+              </div>
             </div>
           ))}
         </div>
