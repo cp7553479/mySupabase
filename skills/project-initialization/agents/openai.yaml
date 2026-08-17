@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Initialization"
+  short_description: "Collect inputs before writing a project specification."
+  default_prompt: "Use $project-initialization to collect the information needed before creating the specification."
