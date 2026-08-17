@@ -32,10 +32,11 @@ export function SiteHeader({
           <Image
             alt={siteName}
             className="h-auto w-24"
-            height={2652}
+            height={151}
             priority
             src="/brand/logopress-black.png"
-            width={3559}
+            unoptimized
+            width={752}
           />
         </Link>
         <nav className="hidden items-center gap-6 lg:flex" aria-label="Primary">

@@ -27,9 +27,10 @@ export function SiteFooter({
           <Image
             alt={site.siteName}
             className="h-auto w-40"
-            height={2652}
+            height={151}
             src="/brand/logopress-black.png"
-            width={3559}
+            unoptimized
+            width={752}
           />
           <p className="text-muted-foreground text-sm leading-6">
             {copy.footerDescription}
