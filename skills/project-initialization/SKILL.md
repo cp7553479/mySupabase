@@ -5,7 +5,7 @@ description: Collects and validates the business inputs required before creating
 
 # Project Initialization
 
-Use `INIT_QUESTIONNAIRE.md` as the intake template for this project.
+Use the provided initialization questionnaire as the intake template.
 
 ## Workflow
 
